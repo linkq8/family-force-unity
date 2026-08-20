@@ -17,6 +17,7 @@ namespace FamilyForceUnity.Core
         {
             EnsureSingleton<SimulationClock>("Simulation Clock");
             EnsureSingleton<LocalPlayerDeviceRegistry>("Local Player Devices");
+            EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
             BuildCamera();
             BuildArena();
 
@@ -121,4 +122,3 @@ namespace FamilyForceUnity.Core
         }
     }
 }
-

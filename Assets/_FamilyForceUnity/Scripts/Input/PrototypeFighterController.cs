@@ -57,15 +57,10 @@ namespace FamilyForceUnity.Input
                 }
             }
 
-            if (Gamepad.all.Count > playerIndex)
-            {
-                Gamepad pad = Gamepad.all[playerIndex];
-                Vector2 padValue = pad.leftStick.ReadValue();
-                if (padValue.sqrMagnitude < 0.1f)
-                    padValue = pad.dpad.ReadValue();
-                if (padValue.sqrMagnitude > value.sqrMagnitude)
-                    value = padValue;
-            }
+            InputDevice controller = ControllerDeviceRouter.GetController(playerIndex);
+            Vector2 controllerValue = ControllerDeviceRouter.ReadMovement(controller);
+            if (controllerValue.sqrMagnitude > value.sqrMagnitude)
+                value = controllerValue;
 
             return Vector2.ClampMagnitude(value, 1f);
         }
@@ -75,9 +70,8 @@ namespace FamilyForceUnity.Input
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            bool gamepadPressed = Gamepad.all.Count > playerIndex && Gamepad.all[playerIndex].buttonSouth.isPressed;
-            return keyboardPressed || gamepadPressed;
+            bool controllerPressed = ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex));
+            return keyboardPressed || controllerPressed;
         }
     }
 }
-

@@ -133,7 +133,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.bundleVersion = "0.1.1";
+            PlayerSettings.Android.bundleVersionCode = 2;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
