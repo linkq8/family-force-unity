@@ -18,8 +18,15 @@ namespace FamilyForceUnity.Core
 
         public IReadOnlyList<CharacterDefinition> Roster => roster;
 
+        public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions)
+        {
+            lightAttack = move;
+            roster = definitions != null ? new List<CharacterDefinition>(definitions) : new List<CharacterDefinition>();
+        }
+
         private void Awake()
         {
+            EnsureRuntimeContent();
             EnsureSingleton<SimulationClock>("Simulation Clock");
             EnsureSingleton<LocalPlayerDeviceRegistry>("Local Player Devices");
             EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
@@ -32,10 +39,27 @@ namespace FamilyForceUnity.Core
             frontend.Configure(this);
         }
 
-        public void BeginMatch(CharacterDefinition playerOne, CharacterDefinition playerOneLink,
+        private void EnsureRuntimeContent()
+        {
+            if (lightAttack == null)
+                lightAttack = MoveDefinition.CreateRuntimePunch();
+
+            bool rosterIsUsable = roster.Count >= 4;
+            for (int i = 0; i < roster.Count && rosterIsUsable; i++)
+                rosterIsUsable = roster[i] != null;
+            if (rosterIsUsable) return;
+
+            roster.Clear();
+            roster.Add(CharacterDefinition.CreateRuntime("essa", "Essa", 177, new Color(0.12f, 0.62f, 0.95f)));
+            roster.Add(CharacterDefinition.CreateRuntime("adam", "Adam", 108, new Color(1f, 0.67f, 0.15f)));
+            roster.Add(CharacterDefinition.CreateRuntime("shaikha", "Shaikha", 108, new Color(0.91f, 0.25f, 0.55f)));
+            roster.Add(CharacterDefinition.CreateRuntime("sulaiman", "Sulaiman", 124, new Color(0.24f, 0.78f, 0.43f)));
+        }
+
+        public bool BeginMatch(CharacterDefinition playerOne, CharacterDefinition playerOneLink,
             bool hasPlayerTwo, CharacterDefinition playerTwo, CharacterDefinition playerTwoLink)
         {
-            if (matchStarted || playerOne == null) return;
+            if (matchStarted || playerOne == null) return false;
             matchStarted = true;
 
             BuildArena();
@@ -46,12 +70,16 @@ namespace FamilyForceUnity.Core
             CreateEnemy("Enemy A", new Vector2(3.6f, -0.3f), new Color(0.85f, 0.18f, 0.25f));
             CreateEnemy("Enemy B", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
             CreateEnemy("Enemy C", new Vector2(6.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
+            return true;
         }
 
         private void OnDestroy()
         {
             foreach (var texture in runtimeTextures)
                 if (texture != null) Destroy(texture);
+            if (lightAttack != null && lightAttack.name == "Runtime_Punch") Destroy(lightAttack);
+            foreach (var character in roster)
+                if (character != null && character.name.StartsWith("Runtime_")) Destroy(character);
         }
 
         private void BuildCamera()

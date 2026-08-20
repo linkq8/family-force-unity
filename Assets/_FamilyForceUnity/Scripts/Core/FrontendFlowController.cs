@@ -27,6 +27,7 @@ namespace FamilyForceUnity.Core
         private bool cancelHeld;
         private bool diagnosticsHeld;
         private bool axisHeld;
+        private string statusMessage;
 
         private GUIStyle titleStyle;
         private GUIStyle headingStyle;
@@ -74,11 +75,18 @@ namespace FamilyForceUnity.Core
                 }
                 else if (confirm && !confirmHeld && focusRow == StartRow)
                 {
-                    bootstrap.BeginMatch(Choice(playerOneHero), Choice(playerOneLink), playerTwoActive,
+                    bool started = bootstrap.BeginMatch(Choice(playerOneHero), Choice(playerOneLink), playerTwoActive,
                         Choice(playerTwoHero), Choice(playerTwoLink));
-                    state = FrontendState.Playing;
-                    var overlay = FindFirstObjectByType<ControllerDiagnosticsOverlay>();
-                    if (overlay != null) overlay.IsVisible = false;
+                    if (started)
+                    {
+                        state = FrontendState.Playing;
+                        var overlay = FindFirstObjectByType<ControllerDiagnosticsOverlay>();
+                        if (overlay != null) overlay.IsVisible = false;
+                    }
+                    else
+                    {
+                        statusMessage = "CONTENT NOT READY — STAYING IN CHARACTER SELECT";
+                    }
                 }
             }
 
@@ -164,6 +172,8 @@ namespace FamilyForceUnity.Core
             DrawChoiceRow(left, rowTop + 156f, width, PlayerTwoLinkRow, "P2 LINK", Choice(playerTwoLink), playerTwoActive);
             DrawStartRow(left, rowTop + 224f, width);
             GUI.Label(new Rect(left, Screen.height - 38f, width, 26), $"Controllers found: {ControllerDeviceRouter.ControllerCount}. A second controller can join P2 with Confirm.", hintStyle);
+            if (!string.IsNullOrEmpty(statusMessage))
+                GUI.Label(new Rect(left, Screen.height - 64f, width, 26), statusMessage, headingStyle);
         }
 
         private void DrawChoiceRow(float left, float top, float width, int row, string label, CharacterDefinition character, bool enabled, string overrideValue = null)

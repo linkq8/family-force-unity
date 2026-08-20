@@ -36,6 +36,14 @@ namespace FamilyForceUnity.Input
             if (device is Joystick joystick)
                 return Vector2.ClampMagnitude(joystick.stick.ReadValue(), 1f);
 
+            if (device == null) return Vector2.zero;
+
+            Vector2Control stick = device.TryGetChildControl<Vector2Control>("leftStick") ??
+                device.TryGetChildControl<Vector2Control>("stick") ??
+                device.TryGetChildControl<Vector2Control>("dpad");
+            if (stick != null)
+                return Vector2.ClampMagnitude(stick.ReadValue(), 1f);
+
             return Vector2.zero;
         }
 
@@ -50,6 +58,15 @@ namespace FamilyForceUnity.Input
                     return true;
 
                 foreach (InputControl control in joystick.allControls)
+                {
+                    if (control is ButtonControl button && button.isPressed)
+                        return true;
+                }
+            }
+
+            if (device != null)
+            {
+                foreach (InputControl control in device.allControls)
                 {
                     if (control is ButtonControl button && button.isPressed)
                         return true;
@@ -82,12 +99,28 @@ namespace FamilyForceUnity.Input
             return $"{manufacturer} / {product} | layout={device.layout} | id={device.deviceId}";
         }
 
+        public static bool IsControllerLike(InputDevice device)
+        {
+            if (device is Gamepad or Joystick) return true;
+            if (device is Keyboard or Mouse or Touchscreen or Pointer) return false;
+            if (device == null) return false;
+
+            string identity = $"{device.description.manufacturer} {device.description.product} {device.displayName} {device.layout}".ToLowerInvariant();
+            if (identity.Contains("sony") || identity.Contains("playstation") || identity.Contains("dualsense") ||
+                identity.Contains("dualshock") || identity.Contains("wireless controller") || identity.Contains("xbox") ||
+                identity.Contains("nintendo") || identity.Contains("joy-con"))
+                return true;
+
+            return device.TryGetChildControl<Vector2Control>("leftStick") != null ||
+                device.TryGetChildControl<Vector2Control>("stick") != null;
+        }
+
         private static void Refresh()
         {
             Controllers.Clear();
             foreach (InputDevice device in InputSystem.devices)
             {
-                if (device is Gamepad or Joystick)
+                if (IsControllerLike(device))
                     Controllers.Add(device);
             }
 

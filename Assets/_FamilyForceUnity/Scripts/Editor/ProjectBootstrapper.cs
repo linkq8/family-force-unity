@@ -25,6 +25,10 @@ namespace FamilyForceUnity.Editor
             MoveDefinition punch = LoadOrCreateMove();
             List<CharacterDefinition> characters = CreateCharacters();
             CreateCustomerPack(characters);
+            // Persist ScriptableObjects before serializing them into the scene.
+            // Without this, Unity writes fileID: 0 references in a fresh project.
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
             CreateScene(punch, characters);
             ConfigureProject();
 
@@ -121,13 +125,9 @@ namespace FamilyForceUnity.Editor
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("Family Force Unity — Prototype");
             var bootstrap = root.AddComponent<PrototypeBootstrap>();
-            var serializedBootstrap = new SerializedObject(bootstrap);
-            serializedBootstrap.FindProperty("lightAttack").objectReferenceValue = punch;
-            var roster = serializedBootstrap.FindProperty("roster");
-            roster.arraySize = characters.Count;
-            for (int i = 0; i < characters.Count; i++)
-                roster.GetArrayElementAtIndex(i).objectReferenceValue = characters[i];
-            serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+            bootstrap.ConfigureContent(punch, characters);
+            EditorUtility.SetDirty(bootstrap);
+            EditorSceneManager.MarkSceneDirty(scene);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -137,8 +137,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.2.0";
-            PlayerSettings.Android.bundleVersionCode = 3;
+            PlayerSettings.bundleVersion = "0.2.1";
+            PlayerSettings.Android.bundleVersionCode = 4;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

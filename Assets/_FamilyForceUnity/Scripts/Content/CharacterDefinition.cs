@@ -23,6 +23,17 @@ namespace FamilyForceUnity.Content
         public float WalkSpeed => walkSpeed;
         public IReadOnlyList<MoveDefinition> Moves => moves;
 
+        public static CharacterDefinition CreateRuntime(string id, string name, int heightCm, Color color)
+        {
+            var definition = CreateInstance<CharacterDefinition>();
+            definition.characterId = id;
+            definition.displayName = name;
+            definition.heightCentimeters = Mathf.Max(1, heightCm);
+            definition.placeholderColor = color;
+            definition.name = $"Runtime_{name}";
+            return definition;
+        }
+
 #if UNITY_EDITOR
         public void Configure(string id, string name, int heightCm, Color color)
         {
@@ -34,4 +45,3 @@ namespace FamilyForceUnity.Content
 #endif
     }
 }
-

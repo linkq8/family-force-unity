@@ -48,6 +48,20 @@ namespace FamilyForceUnity.Combat
         public bool IsActiveAt(int elapsedTick) =>
             elapsedTick >= startupTicks && elapsedTick < startupTicks + activeTicks;
 
+        public static MoveDefinition CreateRuntimePunch()
+        {
+            var move = CreateInstance<MoveDefinition>();
+            move.id = MoveId.Punch;
+            move.startupTicks = 5;
+            move.activeTicks = 3;
+            move.recoveryTicks = 8;
+            move.damage = 10;
+            move.hitPauseTicks = 4;
+            move.knockback = new Vector2(1.5f, 0.2f);
+            move.name = "Runtime_Punch";
+            return move;
+        }
+
 #if UNITY_EDITOR
         public void Configure(MoveId moveId, int startup, int active, int recovery, int moveDamage, int pause, Vector2 force)
         {
@@ -62,4 +76,3 @@ namespace FamilyForceUnity.Combat
 #endif
     }
 }
-

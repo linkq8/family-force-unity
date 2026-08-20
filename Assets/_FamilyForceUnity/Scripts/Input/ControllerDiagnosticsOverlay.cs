@@ -30,7 +30,7 @@ namespace FamilyForceUnity.Input
             foreach (InputDevice device in InputSystem.devices)
             {
                 if (row >= 7) break;
-                bool supported = device is Gamepad or Joystick;
+                bool supported = ControllerDeviceRouter.IsControllerLike(device);
                 string marker = supported ? "READY" : "seen";
                 GUI.Label(new Rect(24, Screen.height - panelHeight + 28 + row * 25, panelWidth - 24, 25),
                     $"[{marker}] {ControllerDeviceRouter.Describe(device)}", labelStyle);
