@@ -1,0 +1,11 @@
+{
+  "name": "FFU.Runtime",
+  "rootNamespace": "FamilyForceUnity",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "autoReferenced": true,
+  "overrideReferences": false,
+  "noEngineReferences": false
+}
+

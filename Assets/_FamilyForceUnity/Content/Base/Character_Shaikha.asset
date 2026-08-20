@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbab50e8736ac48a99252e2a01b5d61f, type: 3}
+  m_Name: Character_Shaikha
+  m_EditorClassIdentifier: FFU.Runtime::FamilyForceUnity.Content.CharacterDefinition
+  characterId: shaikha
+  displayName: Shaikha
+  heightCentimeters: 108
+  placeholderColor: {r: 0.91, g: 0.25, b: 0.55, a: 1}
+  maxHealth: 100
+  walkSpeed: 3.5
+  moves: []

@@ -1,0 +1,14 @@
+{
+  "name": "FFU.Editor",
+  "rootNamespace": "FamilyForceUnity.Editor",
+  "references": [
+    "FFU.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": true,
+  "overrideReferences": false,
+  "noEngineReferences": false
+}
+

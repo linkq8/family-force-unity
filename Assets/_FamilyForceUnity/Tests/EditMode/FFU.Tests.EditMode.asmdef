@@ -1,0 +1,17 @@
+{
+  "name": "FFU.Tests.EditMode",
+  "rootNamespace": "FamilyForceUnity.Tests",
+  "references": [
+    "FFU.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": false,
+  "overrideReferences": false,
+  "noEngineReferences": false
+}
+
