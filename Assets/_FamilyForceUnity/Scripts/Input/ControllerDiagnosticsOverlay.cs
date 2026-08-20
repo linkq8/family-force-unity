@@ -5,11 +5,15 @@ namespace FamilyForceUnity.Input
 {
     public sealed class ControllerDiagnosticsOverlay : MonoBehaviour
     {
+        public bool IsVisible { get; set; }
+
         private GUIStyle labelStyle;
         private GUIStyle titleStyle;
 
         private void OnGUI()
         {
+            if (!IsVisible) return;
+
             labelStyle ??= new GUIStyle(GUI.skin.label) { fontSize = 18, normal = { textColor = Color.white } };
             titleStyle ??= new GUIStyle(labelStyle) { fontSize = 22, fontStyle = FontStyle.Bold };
 
@@ -35,4 +39,3 @@ namespace FamilyForceUnity.Input
         }
     }
 }
-

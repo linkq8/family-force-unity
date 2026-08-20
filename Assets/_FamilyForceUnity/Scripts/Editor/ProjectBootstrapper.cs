@@ -25,7 +25,7 @@ namespace FamilyForceUnity.Editor
             MoveDefinition punch = LoadOrCreateMove();
             List<CharacterDefinition> characters = CreateCharacters();
             CreateCustomerPack(characters);
-            CreateScene(punch);
+            CreateScene(punch, characters);
             ConfigureProject();
 
             AssetDatabase.SaveAssets();
@@ -116,13 +116,17 @@ namespace FamilyForceUnity.Editor
             serializedPack.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void CreateScene(MoveDefinition punch)
+        private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("Family Force Unity — Prototype");
             var bootstrap = root.AddComponent<PrototypeBootstrap>();
             var serializedBootstrap = new SerializedObject(bootstrap);
             serializedBootstrap.FindProperty("lightAttack").objectReferenceValue = punch;
+            var roster = serializedBootstrap.FindProperty("roster");
+            roster.arraySize = characters.Count;
+            for (int i = 0; i < characters.Count; i++)
+                roster.GetArrayElementAtIndex(i).objectReferenceValue = characters[i];
             serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -133,8 +137,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.1.1";
-            PlayerSettings.Android.bundleVersionCode = 2;
+            PlayerSettings.bundleVersion = "0.2.0";
+            PlayerSettings.Android.bundleVersionCode = 3;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

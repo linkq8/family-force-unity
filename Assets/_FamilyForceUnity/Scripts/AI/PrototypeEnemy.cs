@@ -1,4 +1,5 @@
 using FamilyForceUnity.Characters;
+using FamilyForceUnity.Input;
 using UnityEngine;
 
 namespace FamilyForceUnity.AI
@@ -14,7 +15,7 @@ namespace FamilyForceUnity.AI
         {
             motor = GetComponent<LaneMotor>();
             tokens = FindFirstObjectByType<AttackTokenManager>();
-            var player = GameObject.Find("Essa — P1");
+            var player = FindFirstObjectByType<PrototypeFighterController>();
             target = player != null ? player.transform : null;
         }
 
@@ -46,4 +47,3 @@ namespace FamilyForceUnity.AI
         }
     }
 }
-

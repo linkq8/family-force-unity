@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using FamilyForceUnity.AI;
 using FamilyForceUnity.Characters;
 using FamilyForceUnity.Combat;
+using FamilyForceUnity.Content;
 using FamilyForceUnity.Input;
 using UnityEngine;
 
@@ -10,8 +11,12 @@ namespace FamilyForceUnity.Core
     public sealed class PrototypeBootstrap : MonoBehaviour
     {
         [SerializeField] private MoveDefinition lightAttack;
+        [SerializeField] private List<CharacterDefinition> roster = new();
 
         private readonly List<Texture2D> runtimeTextures = new();
+        private bool matchStarted;
+
+        public IReadOnlyList<CharacterDefinition> Roster => roster;
 
         private void Awake()
         {
@@ -19,13 +24,24 @@ namespace FamilyForceUnity.Core
             EnsureSingleton<LocalPlayerDeviceRegistry>("Local Player Devices");
             EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
             BuildCamera();
-            BuildArena();
 
             var tokens = EnsureSingleton<AttackTokenManager>("Attack Token Manager");
             tokens.ConfigureCapacity(2);
 
-            CreateFighter("Essa — P1", new Vector2(-3f, -0.5f), new Color(0.12f, 0.62f, 0.95f), 0);
-            CreateFighter("Adam — P2", new Vector2(-1.8f, -1.2f), new Color(1f, 0.67f, 0.15f), 1);
+            var frontend = gameObject.AddComponent<FrontendFlowController>();
+            frontend.Configure(this);
+        }
+
+        public void BeginMatch(CharacterDefinition playerOne, CharacterDefinition playerOneLink,
+            bool hasPlayerTwo, CharacterDefinition playerTwo, CharacterDefinition playerTwoLink)
+        {
+            if (matchStarted || playerOne == null) return;
+            matchStarted = true;
+
+            BuildArena();
+            CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-3f, -0.5f), playerOne, 0);
+            if (hasPlayerTwo && playerTwo != null)
+                CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, 1);
 
             CreateEnemy("Enemy A", new Vector2(3.6f, -0.3f), new Color(0.85f, 0.18f, 0.25f));
             CreateEnemy("Enemy B", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
@@ -63,9 +79,10 @@ namespace FamilyForceUnity.Core
             CreateBlock("Lane Stripe", new Vector2(0f, -1.45f), new Vector2(18f, 0.06f), new Color(0.95f, 0.67f, 0.16f), -9);
         }
 
-        private void CreateFighter(string label, Vector2 position, Color color, int playerIndex)
+        private void CreateFighter(string label, Vector2 position, CharacterDefinition character, int playerIndex)
         {
-            var fighter = CreateBlock(label, position, new Vector2(0.65f, 1.35f), color, 10);
+            float heightScale = Mathf.Clamp(character.HeightCentimeters / 135f, 0.82f, 1.35f);
+            var fighter = CreateBlock(label, position, new Vector2(0.65f, heightScale), character.PlaceholderColor, 10);
             fighter.AddComponent<LaneMotor>();
             fighter.AddComponent<FighterStateMachine>();
             var controller = fighter.AddComponent<PrototypeFighterController>();
@@ -112,13 +129,5 @@ namespace FamilyForceUnity.Core
             return new GameObject(label).AddComponent<T>();
         }
 
-        private void OnGUI()
-        {
-            GUI.color = Color.white;
-            GUI.Label(new Rect(18, 16, 700, 30), "FAMILY FORCE UNITY — 60 HZ FOUNDATION");
-            GUI.Label(new Rect(18, 42, 900, 30), "P1: WASD / Gamepad 1   Attack: Space / South button");
-            GUI.Label(new Rect(18, 66, 900, 30), "P2: Arrows / Gamepad 2   Attack: Enter / South button");
-            GUI.Label(new Rect(18, Screen.height - 36, 900, 30), "Placeholder art — 640×360 internal presentation target");
-        }
     }
 }

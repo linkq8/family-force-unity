@@ -59,6 +59,17 @@ namespace FamilyForceUnity.Input
             return false;
         }
 
+        public static bool ReadCancel(InputDevice device)
+        {
+            if (device is Gamepad gamepad)
+                return gamepad.buttonEast.isPressed || gamepad.selectButton.isPressed;
+
+            if (device is Joystick joystick)
+                return joystick.trigger != null && joystick.trigger.isPressed;
+
+            return false;
+        }
+
         public static string Describe(InputDevice device)
         {
             if (device == null) return "Not assigned";
@@ -79,7 +90,8 @@ namespace FamilyForceUnity.Input
                 if (device is Gamepad or Joystick)
                     Controllers.Add(device);
             }
+
+            Controllers.Sort((left, right) => left.deviceId.CompareTo(right.deviceId));
         }
     }
 }
-
