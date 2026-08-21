@@ -28,6 +28,8 @@ namespace FamilyForceUnity.Core
         private bool diagnosticsHeld;
         private bool axisHeld;
         private string statusMessage;
+        private int titleFocus;
+        private GitHubUpdateService updater;
 
         private GUIStyle titleStyle;
         private GUIStyle headingStyle;
@@ -38,6 +40,7 @@ namespace FamilyForceUnity.Core
         {
             bootstrap = prototypeBootstrap;
             state = FrontendState.Title;
+            updater = FindFirstObjectByType<GitHubUpdateService>();
         }
 
         private void Update()
@@ -59,7 +62,18 @@ namespace FamilyForceUnity.Core
 
             if (state == FrontendState.Title)
             {
-                if (confirm && !confirmHeld) state = FrontendState.CharacterSelect;
+                Vector2 navigation = ReadNavigation();
+                if (navigation.sqrMagnitude < 0.25f) axisHeld = false;
+                else if (!axisHeld && Mathf.Abs(navigation.y) >= Mathf.Abs(navigation.x))
+                {
+                    axisHeld = true;
+                    titleFocus = titleFocus == 0 ? 1 : 0;
+                }
+                if (confirm && !confirmHeld)
+                {
+                    if (titleFocus == 0) state = FrontendState.CharacterSelect;
+                    else updater?.Activate();
+                }
             }
             else
             {
@@ -147,8 +161,22 @@ namespace FamilyForceUnity.Core
             GUI.Label(new Rect(left, Screen.height * 0.16f, width, 96), "FAMILY FORCE", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.34f, width, 60), "UNITY", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.51f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.76f, width, 46), "PRESS CONFIRM", headingStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.87f, width, 28), "D-pad to navigate   Confirm to select   Back to return   F1 / R3 / Touchpad for input devices", hintStyle);
+            DrawTitleButton(left, Screen.height * 0.69f, width, "START GAME", titleFocus == 0);
+            string updateLabel = updater != null ? updater.Status : "CHECK FOR UPDATE";
+            DrawTitleButton(left, Screen.height * 0.78f, width, updateLabel, titleFocus == 1);
+            GUI.Label(new Rect(left, Screen.height * 0.9f, width, 28), $"VERSION {Application.version}   D-pad to navigate   Confirm to select", hintStyle);
+        }
+
+        private void DrawTitleButton(float left, float top, float width, string label, bool focused)
+        {
+            DrawSolid(new Rect(left + width * 0.18f, top, width * 0.64f, 46f),
+                focused ? new Color(0.97f, 0.67f, 0.16f) : new Color(0.06f, 0.09f, 0.17f, 0.94f));
+            var style = new GUIStyle(headingStyle)
+            {
+                normal = { textColor = focused ? new Color(0.05f, 0.04f, 0.08f) : Color.white },
+                fontSize = 19
+            };
+            GUI.Label(new Rect(left + width * 0.18f, top + 6f, width * 0.64f, 34f), label, style);
         }
 
         private void DrawCharacterSelect()

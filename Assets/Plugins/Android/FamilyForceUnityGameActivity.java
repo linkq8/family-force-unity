@@ -1,6 +1,9 @@
 package com.familyforceunity.input;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -9,9 +12,32 @@ import java.util.Locale;
 
 import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.UnityPlayerGameActivity;
+import java.io.File;
 
 public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     private static final String RECEIVER = "Android Input Bridge";
+
+    public int installDownloadedApk(String apkPath) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    !getPackageManager().canRequestPackageInstalls()) {
+                Intent settingsIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + getPackageName()));
+                startActivity(settingsIntent);
+                return 0;
+            }
+
+            Uri apkUri = Uri.parse("content://" + getPackageName() + ".updates/update.apk");
+            Intent installIntent = new Intent(Intent.ACTION_VIEW);
+            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(installIntent);
+            return 1;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return -1;
+        }
+    }
 
     private static boolean isControllerSource(int source) {
         return (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||

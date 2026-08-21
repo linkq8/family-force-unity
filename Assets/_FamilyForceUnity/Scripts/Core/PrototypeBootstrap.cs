@@ -34,6 +34,7 @@ namespace FamilyForceUnity.Core
             EnsureSingleton<LocalPlayerDeviceRegistry>("Local Player Devices");
             EnsureSingleton<AndroidNativeInputBridge>("Android Input Bridge");
             EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
+            EnsureSingleton<GitHubUpdateService>("GitHub Update Service");
             BuildCamera();
 
             var tokens = EnsureSingleton<AttackTokenManager>("Attack Token Manager");

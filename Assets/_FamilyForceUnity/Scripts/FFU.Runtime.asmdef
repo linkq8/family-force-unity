@@ -2,10 +2,11 @@
   "name": "FFU.Runtime",
   "rootNamespace": "FamilyForceUnity",
   "references": [
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "UnityEngine.UnityWebRequestModule",
+    "UnityEngine.AndroidJNIModule"
   ],
   "autoReferenced": true,
   "overrideReferences": false,
   "noEngineReferences": false
 }
-
