@@ -60,6 +60,8 @@ namespace FamilyForceUnity.Input
 
         public static bool ReadSouth(int playerIndex) => ReadButton(playerIndex, 96);
         public static bool ReadEast(int playerIndex) => ReadButton(playerIndex, 97);
+        public static bool ReadNorth(int playerIndex) => ReadButton(playerIndex, 99);
+        public static bool ReadWest(int playerIndex) => ReadButton(playerIndex, 100);
         public static bool ReadL3(int playerIndex) => ReadButton(playerIndex, 106);
         public static bool ReadR3(int playerIndex) => ReadButton(playerIndex, 107);
 

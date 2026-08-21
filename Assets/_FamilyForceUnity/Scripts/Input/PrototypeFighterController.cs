@@ -71,7 +71,7 @@ namespace FamilyForceUnity.Input
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            bool controllerPressed = ControllerDeviceRouter.ReadPlayerConfirm(playerIndex);
+            bool controllerPressed = ControllerDeviceRouter.ReadPlayerLightAttack(playerIndex);
             return keyboardPressed || controllerPressed;
         }
     }
