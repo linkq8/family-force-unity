@@ -19,11 +19,12 @@ namespace FamilyForceUnity.Core
 
         private string downloadUrl;
         private string downloadedApkPath;
+        private bool downloadReady;
 
         public void Activate()
         {
             if (IsBusy) return;
-            if (!string.IsNullOrEmpty(downloadedApkPath) && File.Exists(downloadedApkPath)) LaunchInstaller(downloadedApkPath);
+            if (downloadReady || (!string.IsNullOrEmpty(downloadedApkPath) && File.Exists(downloadedApkPath))) LaunchInstaller(downloadedApkPath);
             else if (HasUpdate && !string.IsNullOrEmpty(downloadUrl)) StartCoroutine(DownloadAndInstall());
             else StartCoroutine(CheckLatest());
         }
@@ -74,7 +75,48 @@ namespace FamilyForceUnity.Core
         private IEnumerator DownloadAndInstall()
         {
             IsBusy = true;
-            Status = "DOWNLOADING UPDATE...";
+            Status = "STARTING ANDROID DOWNLOAD...";
+#if UNITY_ANDROID && !UNITY_EDITOR
+            using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            using AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            long downloadId = activity.Call<long>("beginApkDownload", downloadUrl);
+            if (downloadId < 0)
+            {
+                Status = "DOWNLOAD COULD NOT START";
+                IsBusy = false;
+                yield break;
+            }
+
+            long previousBytes = 0;
+            float previousTime = Time.realtimeSinceStartup;
+            while (true)
+            {
+                string response = activity.Call<string>("getApkDownloadStatus", downloadId);
+                string[] values = response.Split('|');
+                long.TryParse(values.Length > 1 ? values[1] : "0", out long bytes);
+                long.TryParse(values.Length > 2 ? values[2] : "0", out long total);
+                float now = Time.realtimeSinceStartup;
+                float speed = (bytes - previousBytes) / Mathf.Max(0.01f, now - previousTime) / (1024f * 1024f);
+                previousBytes = bytes;
+                previousTime = now;
+                int percent = total > 0 ? Mathf.Clamp(Mathf.RoundToInt(bytes * 100f / total), 0, 100) : 0;
+                Status = $"DOWNLOADING... {percent}%  {speed:0.0} MB/s";
+
+                if (values.Length > 0 && values[0] == "SUCCESS") break;
+                if (values.Length > 0 && values[0] == "FAILED")
+                {
+                    Status = "DOWNLOAD FAILED — TRY AGAIN";
+                    IsBusy = false;
+                    yield break;
+                }
+                yield return new WaitForSecondsRealtime(0.35f);
+            }
+
+            downloadedApkPath = "android-download-manager";
+            downloadReady = true;
+            LaunchInstaller(downloadedApkPath);
+            IsBusy = false;
+#else
             string apkPath = Path.Combine(Application.temporaryCachePath, "FamilyForceUnity-update.apk");
             using var request = new UnityWebRequest(downloadUrl, UnityWebRequest.kHttpVerbGET)
             {
@@ -99,6 +141,7 @@ namespace FamilyForceUnity.Core
             downloadedApkPath = apkPath;
             LaunchInstaller(apkPath);
             IsBusy = false;
+#endif
         }
 
         private void LaunchInstaller(string apkPath)

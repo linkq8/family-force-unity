@@ -1,6 +1,9 @@
 package com.familyforceunity.input;
 
 import android.content.Intent;
+import android.app.DownloadManager;
+import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -19,6 +22,48 @@ import java.io.File;
 public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     private static final String RECEIVER = "Android Input Bridge";
     private static final Set<Integer> ANNOUNCED_DEVICES = new HashSet<>();
+    private long activeDownloadId = -1L;
+
+    public long beginApkDownload(String url) {
+        try {
+            DownloadManager manager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
+            File destination = new File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS),
+                    "FamilyForceUnity-update.apk");
+            if (destination.exists()) destination.delete();
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            request.setTitle("Family Force Unity update");
+            request.setDescription("Downloading the latest game version");
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setDestinationUri(Uri.fromFile(destination));
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(false);
+            activeDownloadId = manager.enqueue(request);
+            return activeDownloadId;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return -1L;
+        }
+    }
+
+    public String getApkDownloadStatus(long downloadId) {
+        DownloadManager manager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
+        Cursor cursor = manager.query(new DownloadManager.Query().setFilterById(downloadId));
+        if (cursor == null) return "FAILED|0|0|0";
+        try {
+            if (!cursor.moveToFirst()) return "FAILED|0|0|0";
+            int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+            long downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+            long total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+            int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
+            String label = status == DownloadManager.STATUS_SUCCESSFUL ? "SUCCESS" :
+                    status == DownloadManager.STATUS_FAILED ? "FAILED" :
+                    status == DownloadManager.STATUS_PAUSED ? "PAUSED" : "RUNNING";
+            return label + "|" + downloaded + "|" + total + "|" + reason;
+        } finally {
+            cursor.close();
+        }
+    }
 
     private static String clean(String value) {
         return value == null ? "" : value.replace('|', '/');

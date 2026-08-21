@@ -72,7 +72,7 @@ namespace FamilyForceUnity.Core
             if (hasPlayerTwo && playerTwo != null)
                 CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, 1);
 
-            CreateEnemy("Enemy A", new Vector2(3.6f, -0.3f), new Color(0.85f, 0.18f, 0.25f));
+            CreateStreetGuard("Rami — Street Guard", new Vector2(3.6f, -0.3f));
             CreateEnemy("Enemy B", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
             CreateEnemy("Enemy C", new Vector2(6.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
             return true;
@@ -167,6 +167,44 @@ namespace FamilyForceUnity.Core
             enemy.AddComponent<LaneMotor>();
             enemy.AddComponent<FighterStateMachine>();
             enemy.AddComponent<PrototypeEnemy>();
+        }
+
+        private void CreateStreetGuard(string label, Vector2 position)
+        {
+            var enemy = CreateBlock(label, position, new Vector2(0.68f, 0.78f), new Color(0.12f, 0.18f, 0.27f), 8);
+            enemy.AddComponent<LaneMotor>();
+            enemy.AddComponent<FighterStateMachine>();
+
+            GameObject head = CreateBlock("Rami Head", Vector2.zero, new Vector2(0.48f, 0.42f), new Color(0.68f, 0.42f, 0.28f), 10);
+            AttachPart(head, enemy.transform, new Vector2(0f, 0.64f));
+            GameObject hair = CreateBlock("Rami Hair", Vector2.zero, new Vector2(0.5f, 0.12f), new Color(0.055f, 0.04f, 0.035f), 11);
+            AttachPart(hair, enemy.transform, new Vector2(0f, 0.83f));
+            GameObject belt = CreateBlock("Rami Belt", Vector2.zero, new Vector2(0.7f, 0.11f), new Color(0.95f, 0.65f, 0.12f), 10);
+            AttachPart(belt, enemy.transform, new Vector2(0f, -0.13f));
+            CreateAndAttachPart("Rami Left Leg", enemy.transform, new Vector2(-0.18f, -0.62f), new Vector2(0.22f, 0.58f), new Color(0.08f, 0.1f, 0.15f), 7);
+            CreateAndAttachPart("Rami Right Leg", enemy.transform, new Vector2(0.18f, -0.62f), new Vector2(0.22f, 0.58f), new Color(0.08f, 0.1f, 0.15f), 7);
+            GameObject attackArm = CreateAndAttachPart("Rami Attack Arm", enemy.transform, new Vector2(-0.47f, 0.12f), new Vector2(0.18f, 0.7f), new Color(0.68f, 0.42f, 0.28f), 9);
+            CreateAndAttachPart("Rami Right Arm", enemy.transform, new Vector2(0.47f, 0.12f), new Vector2(0.18f, 0.7f), new Color(0.68f, 0.42f, 0.28f), 9);
+
+            var visual = enemy.AddComponent<PrototypeEnemyVisual>();
+            visual.Configure(attackArm.transform);
+            enemy.AddComponent<PrototypeEnemy>();
+        }
+
+        private GameObject CreateAndAttachPart(string label, Transform parent, Vector2 localPosition,
+            Vector2 size, Color color, int order)
+        {
+            GameObject part = CreateBlock(label, Vector2.zero, size, color, order);
+            AttachPart(part, parent, localPosition);
+            return part;
+        }
+
+        private static void AttachPart(GameObject part, Transform parent, Vector2 localPosition)
+        {
+            Vector3 scale = part.transform.localScale;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = new Vector3(localPosition.x, localPosition.y, -0.01f);
+            part.transform.localScale = new Vector3(scale.x / parent.localScale.x, scale.y / parent.localScale.y, 1f);
         }
 
         private GameObject CreateBlock(string label, Vector2 position, Vector2 size, Color color, int order)

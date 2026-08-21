@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.os.Environment;
 import android.provider.OpenableColumns;
 
 import java.io.File;
@@ -15,7 +16,7 @@ public final class UpdateFileProvider extends ContentProvider {
     private static final String FILE_NAME = "FamilyForceUnity-update.apk";
 
     private File updateFile() {
-        return new File(getContext().getCacheDir(), FILE_NAME);
+        return new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), FILE_NAME);
     }
 
     @Override public boolean onCreate() { return true; }
