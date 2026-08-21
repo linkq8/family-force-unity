@@ -7,14 +7,13 @@ namespace FamilyForceUnity.Core
 {
     public sealed class FrontendFlowController : MonoBehaviour
     {
-        private enum FrontendState { Title, CharacterSelect, ControllerSetup, Playing }
+        private enum FrontendState { Title, CharacterSelect, Playing }
 
         private const int PlayerOneHeroRow = 0;
         private const int PlayerOneLinkRow = 1;
         private const int PlayerTwoRow = 2;
         private const int PlayerTwoLinkRow = 3;
-        private const int SetupRow = 4;
-        private const int StartRow = 5;
+        private const int StartRow = 4;
 
         private PrototypeBootstrap bootstrap;
         private FrontendState state;
@@ -29,8 +28,6 @@ namespace FamilyForceUnity.Core
         private bool diagnosticsHeld;
         private bool axisHeld;
         private string statusMessage;
-        private int calibrationStep;
-        private bool calibrationWaitingForRelease;
 
         private GUIStyle titleStyle;
         private GUIStyle headingStyle;
@@ -57,12 +54,6 @@ namespace FamilyForceUnity.Core
 
             if (state == FrontendState.Playing) return;
 
-            if (state == FrontendState.ControllerSetup)
-            {
-                UpdateCalibration();
-                return;
-            }
-
             bool confirm = ReadConfirm(0);
             bool cancel = ReadCancel();
 
@@ -77,12 +68,6 @@ namespace FamilyForceUnity.Core
                 {
                     state = FrontendState.Title;
                     focusRow = PlayerOneHeroRow;
-                }
-                else if (confirm && !confirmHeld && focusRow == SetupRow)
-                {
-                    calibrationStep = 0;
-                    calibrationWaitingForRelease = true;
-                    state = FrontendState.ControllerSetup;
                 }
                 else if (confirm && !confirmHeld && focusRow == StartRow)
                 {
@@ -132,34 +117,12 @@ namespace FamilyForceUnity.Core
             }
         }
 
-        private void UpdateCalibration()
-        {
-            if (calibrationWaitingForRelease)
-            {
-                if (!ControllerCalibrationProfile.AnyControlActuated())
-                    calibrationWaitingForRelease = false;
-                return;
-            }
-
-            if (!ControllerCalibrationProfile.TryCapture(out string path, out float direction)) return;
-            var action = (ControllerCalibrationProfile.Action)calibrationStep;
-            ControllerCalibrationProfile.Save(action, path, direction);
-            calibrationStep++;
-            calibrationWaitingForRelease = true;
-            if (calibrationStep <= (int)ControllerCalibrationProfile.Action.Attack) return;
-
-            statusMessage = "CONTROLLER CALIBRATION SAVED";
-            focusRow = SetupRow;
-            state = FrontendState.CharacterSelect;
-        }
-
         private void OnGUI()
         {
             if (state == FrontendState.Playing) return;
             BuildStyles();
             DrawBackdrop();
             if (state == FrontendState.Title) DrawTitle();
-            else if (state == FrontendState.ControllerSetup) DrawControllerSetup();
             else DrawCharacterSelect();
         }
 
@@ -202,23 +165,10 @@ namespace FamilyForceUnity.Core
             string playerTwoValue = playerTwoActive ? $"{Choice(playerTwoHero).DisplayName}  /  {Choice(playerTwoHero).HeightCentimeters} cm" : "OPTIONAL — OFF";
             DrawChoiceRow(left, rowTop + 104f, width, PlayerTwoRow, "P2", null, playerTwoActive, playerTwoValue);
             DrawChoiceRow(left, rowTop + 156f, width, PlayerTwoLinkRow, "P2 LINK", Choice(playerTwoLink), playerTwoActive);
-            DrawActionRow(left, rowTop + 212f, width, SetupRow, ControllerCalibrationProfile.IsComplete ? "RECALIBRATE CONTROLLER" : "CALIBRATE CONTROLLER");
-            DrawStartRow(left, rowTop + 270f, width);
+            DrawStartRow(left, rowTop + 224f, width);
             GUI.Label(new Rect(left, Screen.height - 38f, width, 26), $"Controllers found: {ControllerDeviceRouter.ControllerCount}. A second controller can join P2 with Confirm.", hintStyle);
             if (!string.IsNullOrEmpty(statusMessage))
                 GUI.Label(new Rect(left, Screen.height - 64f, width, 26), statusMessage, headingStyle);
-        }
-
-        private void DrawControllerSetup()
-        {
-            string[] prompts = { "PRESS D-PAD UP", "PRESS D-PAD DOWN", "PRESS D-PAD LEFT", "PRESS D-PAD RIGHT", "PRESS X" };
-            float width = Mathf.Min(Screen.width * 0.84f, 980f);
-            float left = (Screen.width - width) * 0.5f;
-            GUI.Label(new Rect(left, Screen.height * 0.18f, width, 50f), "CONTROLLER CALIBRATION", headingStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.36f, width, 62f), prompts[Mathf.Clamp(calibrationStep, 0, prompts.Length - 1)], titleStyle);
-            string stateText = calibrationWaitingForRelease ? "RELEASE ALL CONTROLLER BUTTONS" : "WAITING FOR DUALSENSE INPUT";
-            GUI.Label(new Rect(left, Screen.height * 0.58f, width, 36f), stateText, hintStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.74f, width, 32f), $"STEP {calibrationStep + 1} OF {prompts.Length}", hintStyle);
         }
 
         private void DrawChoiceRow(float left, float top, float width, int row, string label, CharacterDefinition character, bool enabled, string overrideValue = null)
@@ -241,13 +191,6 @@ namespace FamilyForceUnity.Core
                 focused ? new Color(0.97f, 0.67f, 0.16f) : new Color(0.45f, 0.28f, 0.07f));
             var style = new GUIStyle(headingStyle) { normal = { textColor = focused ? new Color(0.05f, 0.04f, 0.08f) : Color.white } };
             GUI.Label(new Rect(left, top + 9f, width, 34f), "START 60 HZ TEST STAGE", style);
-        }
-
-        private void DrawActionRow(float left, float top, float width, int row, string label)
-        {
-            bool focused = focusRow == row;
-            DrawSolid(new Rect(left, top, width, 48f), focused ? new Color(0.17f, 0.55f, 0.88f) : new Color(0.06f, 0.09f, 0.17f));
-            GUI.Label(new Rect(left, top + 7f, width, 34f), label, headingStyle);
         }
 
         private void BuildStyles()
@@ -287,20 +230,8 @@ namespace FamilyForceUnity.Core
                 value.x = (keyboard.rightArrowKey.isPressed ? 1 : 0) - (keyboard.leftArrowKey.isPressed ? 1 : 0);
                 value.y = (keyboard.upArrowKey.isPressed ? 1 : 0) - (keyboard.downArrowKey.isPressed ? 1 : 0);
             }
-            Vector2 controller = ControllerCalibrationProfile.IsComplete
-                ? ControllerCalibrationProfile.ReadMovement()
-                : ControllerDeviceRouter.ReadMovement(ControllerDeviceRouter.GetController(0));
-            if (ControllerCalibrationProfile.IsComplete)
-            {
-                Vector2 analog = ControllerDeviceRouter.ReadAnalogMovement(ControllerDeviceRouter.GetController(0));
-                if (analog.sqrMagnitude > controller.sqrMagnitude) controller = analog;
-            }
+            Vector2 controller = ControllerDeviceRouter.ReadPlayerMovement(0);
             if (controller.sqrMagnitude > value.sqrMagnitude) value = controller;
-            if (!ControllerCalibrationProfile.IsComplete)
-            {
-                Vector2 legacy = ControllerDeviceRouter.ReadLegacyMovement(0);
-                if (legacy.sqrMagnitude > value.sqrMagnitude) value = legacy;
-            }
             return value;
         }
 
@@ -309,20 +240,14 @@ namespace FamilyForceUnity.Core
             Keyboard keyboard = Keyboard.current;
             bool keyboardConfirm = playerIndex == 0 && keyboard != null &&
                 (keyboard.enterKey.isPressed || keyboard.spaceKey.isPressed);
-            bool calibratedConfirm = playerIndex == 0 && ControllerCalibrationProfile.IsComplete &&
-                ControllerCalibrationProfile.ReadAttack();
-            return keyboardConfirm || calibratedConfirm ||
-                (!ControllerCalibrationProfile.IsComplete &&
-                    (ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex)) ||
-                     ControllerDeviceRouter.ReadLegacyConfirm(playerIndex)));
+            return keyboardConfirm || ControllerDeviceRouter.ReadPlayerConfirm(playerIndex);
         }
 
         private static bool ReadCancel()
         {
             Keyboard keyboard = Keyboard.current;
             return (keyboard != null && (keyboard.escapeKey.isPressed || keyboard.backspaceKey.isPressed)) ||
-                ControllerDeviceRouter.ReadCancel(ControllerDeviceRouter.GetController(0)) ||
-                ControllerDeviceRouter.ReadLegacyCancel(0);
+                ControllerDeviceRouter.ReadPlayerCancel(0);
         }
 
         private static bool ReadDiagnostics()
@@ -331,7 +256,7 @@ namespace FamilyForceUnity.Core
             if (keyboard != null && keyboard.f1Key.isPressed) return true;
             InputDevice controller = ControllerDeviceRouter.GetController(0);
             return (controller is Gamepad gamepad && gamepad.rightStickButton.isPressed) ||
-                ControllerDeviceRouter.ReadLegacyDiagnostics(0);
+                ControllerDeviceRouter.ReadPlayerDiagnostics(0);
         }
     }
 }

@@ -13,9 +13,42 @@ namespace FamilyForceUnity.Input
         {
             get
             {
+                if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ControllerCount;
                 Refresh();
                 return Mathf.Max(Controllers.Count, LegacyControllerCount);
             }
+        }
+
+        public static Vector2 ReadPlayerMovement(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadMovement(playerIndex);
+
+            InputDevice device = GetController(playerIndex);
+            Vector2 modern = ReadMovement(device);
+            Vector2 legacy = ReadLegacyMovement(playerIndex);
+            return modern.sqrMagnitude >= legacy.sqrMagnitude ? modern : legacy;
+        }
+
+        public static bool ReadPlayerConfirm(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadSouth(playerIndex);
+            return ReadConfirm(GetController(playerIndex)) || ReadLegacyConfirm(playerIndex);
+        }
+
+        public static bool ReadPlayerCancel(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadEast(playerIndex);
+            return ReadCancel(GetController(playerIndex)) || ReadLegacyCancel(playerIndex);
+        }
+
+        public static bool ReadPlayerDiagnostics(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadL3(playerIndex) || AndroidNativeInputBridge.ReadR3(playerIndex);
+            return ReadLegacyDiagnostics(playerIndex);
         }
 
         public static int LegacyControllerCount

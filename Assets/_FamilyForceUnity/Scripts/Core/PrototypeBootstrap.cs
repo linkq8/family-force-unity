@@ -29,6 +29,7 @@ namespace FamilyForceUnity.Core
             EnsureRuntimeContent();
             EnsureSingleton<SimulationClock>("Simulation Clock");
             EnsureSingleton<LocalPlayerDeviceRegistry>("Local Player Devices");
+            EnsureSingleton<AndroidNativeInputBridge>("Android Input Bridge");
             EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
             BuildCamera();
 

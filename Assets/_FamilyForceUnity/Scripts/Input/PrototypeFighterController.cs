@@ -59,25 +59,9 @@ namespace FamilyForceUnity.Input
                 }
             }
 
-            InputDevice controller = ControllerDeviceRouter.GetController(playerIndex);
-            Vector2 controllerValue = playerIndex == 0 && ControllerCalibrationProfile.IsComplete
-                ? ControllerCalibrationProfile.ReadMovement()
-                : ControllerDeviceRouter.ReadMovement(controller);
-            if (playerIndex == 0 && ControllerCalibrationProfile.IsComplete)
-            {
-                Vector2 analogValue = ControllerDeviceRouter.ReadAnalogMovement(controller);
-                if (analogValue.sqrMagnitude > controllerValue.sqrMagnitude)
-                    controllerValue = analogValue;
-            }
+            Vector2 controllerValue = ControllerDeviceRouter.ReadPlayerMovement(playerIndex);
             if (controllerValue.sqrMagnitude > value.sqrMagnitude)
                 value = controllerValue;
-
-            if (!ControllerCalibrationProfile.IsComplete)
-            {
-                Vector2 legacyValue = ControllerDeviceRouter.ReadLegacyMovement(playerIndex);
-                if (legacyValue.sqrMagnitude > value.sqrMagnitude)
-                    value = legacyValue;
-            }
 
             return Vector2.ClampMagnitude(value, 1f);
         }
@@ -87,10 +71,7 @@ namespace FamilyForceUnity.Input
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            bool controllerPressed = playerIndex == 0 && ControllerCalibrationProfile.IsComplete
-                ? ControllerCalibrationProfile.ReadAttack()
-                : ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex)) ||
-                    ControllerDeviceRouter.ReadLegacyConfirm(playerIndex);
+            bool controllerPressed = ControllerDeviceRouter.ReadPlayerConfirm(playerIndex);
             return keyboardPressed || controllerPressed;
         }
     }
