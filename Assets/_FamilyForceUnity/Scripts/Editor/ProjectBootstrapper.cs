@@ -137,8 +137,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.2.1";
-            PlayerSettings.Android.bundleVersionCode = 4;
+            PlayerSettings.bundleVersion = "0.2.2";
+            PlayerSettings.Android.bundleVersionCode = 5;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
@@ -160,7 +160,7 @@ namespace FamilyForceUnity.Editor
             var serializedSettings = new SerializedObject(settingsAssets[0]);
             SerializedProperty inputHandler = serializedSettings.FindProperty("activeInputHandler");
             if (inputHandler == null) return;
-            inputHandler.intValue = 1;
+            inputHandler.intValue = 2;
             serializedSettings.ApplyModifiedPropertiesWithoutUndo();
         }
 

@@ -47,8 +47,10 @@ namespace FamilyForceUnity.Input
             {
                 if (playerIndex == 0)
                 {
-                    value.x = (keyboard.dKey.isPressed ? 1 : 0) - (keyboard.aKey.isPressed ? 1 : 0);
-                    value.y = (keyboard.wKey.isPressed ? 1 : 0) - (keyboard.sKey.isPressed ? 1 : 0);
+                    value.x = ((keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) ? 1 : 0) -
+                        ((keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) ? 1 : 0);
+                    value.y = ((keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) ? 1 : 0) -
+                        ((keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) ? 1 : 0);
                 }
                 else
                 {
@@ -62,6 +64,10 @@ namespace FamilyForceUnity.Input
             if (controllerValue.sqrMagnitude > value.sqrMagnitude)
                 value = controllerValue;
 
+            Vector2 legacyValue = ControllerDeviceRouter.ReadLegacyMovement(playerIndex);
+            if (legacyValue.sqrMagnitude > value.sqrMagnitude)
+                value = legacyValue;
+
             return Vector2.ClampMagnitude(value, 1f);
         }
 
@@ -71,7 +77,7 @@ namespace FamilyForceUnity.Input
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
             bool controllerPressed = ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex));
-            return keyboardPressed || controllerPressed;
+            return keyboardPressed || controllerPressed || ControllerDeviceRouter.ReadLegacyConfirm(playerIndex);
         }
     }
 }

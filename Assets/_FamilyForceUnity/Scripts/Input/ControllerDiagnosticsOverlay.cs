@@ -18,7 +18,8 @@ namespace FamilyForceUnity.Input
             titleStyle ??= new GUIStyle(labelStyle) { fontSize = 22, fontStyle = FontStyle.Bold };
 
             float panelWidth = Mathf.Min(Screen.width - 24f, 940f);
-            float panelHeight = 44f + Mathf.Min(InputSystem.devices.Count, 7) * 25f;
+            string[] legacyNames = ControllerDeviceRouter.GetLegacyControllerNames();
+            float panelHeight = 44f + Mathf.Min(InputSystem.devices.Count + legacyNames.Length, 9) * 25f;
             GUI.color = new Color(0f, 0f, 0f, 0.72f);
             GUI.Box(new Rect(12, Screen.height - panelHeight - 12, panelWidth, panelHeight), GUIContent.none);
             GUI.color = Color.white;
@@ -34,6 +35,14 @@ namespace FamilyForceUnity.Input
                 string marker = supported ? "READY" : "seen";
                 GUI.Label(new Rect(24, Screen.height - panelHeight + 28 + row * 25, panelWidth - 24, 25),
                     $"[{marker}] {ControllerDeviceRouter.Describe(device)}", labelStyle);
+                row++;
+            }
+
+            foreach (string legacyName in legacyNames)
+            {
+                if (row >= 9 || string.IsNullOrWhiteSpace(legacyName)) continue;
+                GUI.Label(new Rect(24, Screen.height - panelHeight + 28 + row * 25, panelWidth - 24, 25),
+                    $"[LEGACY READY] {legacyName}", labelStyle);
                 row++;
             }
         }

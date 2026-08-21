@@ -42,18 +42,21 @@ namespace FamilyForceUnity.Core
 
         private void Update()
         {
-            if (bootstrap == null || state == FrontendState.Playing) return;
+            if (bootstrap == null) return;
 
-            bool confirm = ReadConfirm(0);
-            bool secondConfirm = ReadConfirm(1);
-            bool cancel = ReadCancel();
             bool diagnostics = ReadDiagnostics();
-
             if (diagnostics && !diagnosticsHeld)
             {
                 var overlay = FindFirstObjectByType<ControllerDiagnosticsOverlay>();
                 if (overlay != null) overlay.IsVisible = !overlay.IsVisible;
             }
+            diagnosticsHeld = diagnostics;
+
+            if (state == FrontendState.Playing) return;
+
+            bool confirm = ReadConfirm(0);
+            bool secondConfirm = ReadConfirm(1);
+            bool cancel = ReadCancel();
 
             if (state == FrontendState.Title)
             {
@@ -92,7 +95,6 @@ namespace FamilyForceUnity.Core
 
             confirmHeld = confirm;
             cancelHeld = cancel;
-            diagnosticsHeld = diagnostics;
         }
 
         private void HandleSelection(Vector2 navigation)
@@ -236,7 +238,9 @@ namespace FamilyForceUnity.Core
                 value.y = (keyboard.upArrowKey.isPressed ? 1 : 0) - (keyboard.downArrowKey.isPressed ? 1 : 0);
             }
             Vector2 controller = ControllerDeviceRouter.ReadMovement(ControllerDeviceRouter.GetController(0));
-            return controller.sqrMagnitude > value.sqrMagnitude ? controller : value;
+            if (controller.sqrMagnitude > value.sqrMagnitude) value = controller;
+            Vector2 legacy = ControllerDeviceRouter.ReadLegacyMovement(0);
+            return legacy.sqrMagnitude > value.sqrMagnitude ? legacy : value;
         }
 
         private static bool ReadConfirm(int playerIndex)
@@ -244,14 +248,16 @@ namespace FamilyForceUnity.Core
             Keyboard keyboard = Keyboard.current;
             bool keyboardConfirm = playerIndex == 0 && keyboard != null &&
                 (keyboard.enterKey.isPressed || keyboard.spaceKey.isPressed);
-            return keyboardConfirm || ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex));
+            return keyboardConfirm || ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex)) ||
+                ControllerDeviceRouter.ReadLegacyConfirm(playerIndex);
         }
 
         private static bool ReadCancel()
         {
             Keyboard keyboard = Keyboard.current;
             return (keyboard != null && (keyboard.escapeKey.isPressed || keyboard.backspaceKey.isPressed)) ||
-                ControllerDeviceRouter.ReadCancel(ControllerDeviceRouter.GetController(0));
+                ControllerDeviceRouter.ReadCancel(ControllerDeviceRouter.GetController(0)) ||
+                ControllerDeviceRouter.ReadLegacyCancel(0);
         }
 
         private static bool ReadDiagnostics()
@@ -259,7 +265,8 @@ namespace FamilyForceUnity.Core
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.isPressed) return true;
             InputDevice controller = ControllerDeviceRouter.GetController(0);
-            return controller is Gamepad gamepad && gamepad.rightStickButton.isPressed;
+            return (controller is Gamepad gamepad && gamepad.rightStickButton.isPressed) ||
+                ControllerDeviceRouter.ReadLegacyDiagnostics(0);
         }
     }
 }

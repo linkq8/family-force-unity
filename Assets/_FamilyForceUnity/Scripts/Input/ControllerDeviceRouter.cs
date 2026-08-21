@@ -14,7 +14,19 @@ namespace FamilyForceUnity.Input
             get
             {
                 Refresh();
-                return Controllers.Count;
+                return Mathf.Max(Controllers.Count, LegacyControllerCount);
+            }
+        }
+
+        public static int LegacyControllerCount
+        {
+            get
+            {
+                string[] names = UnityEngine.Input.GetJoystickNames();
+                int count = 0;
+                foreach (string name in names)
+                    if (!string.IsNullOrWhiteSpace(name)) count++;
+                return count;
             }
         }
 
@@ -86,6 +98,26 @@ namespace FamilyForceUnity.Input
 
             return false;
         }
+
+        public static Vector2 ReadLegacyMovement(int playerIndex)
+        {
+            if (playerIndex != 0 || LegacyControllerCount == 0) return Vector2.zero;
+            return Vector2.ClampMagnitude(new Vector2(
+                UnityEngine.Input.GetAxisRaw("Horizontal"),
+                UnityEngine.Input.GetAxisRaw("Vertical")), 1f);
+        }
+
+        public static bool ReadLegacyConfirm(int playerIndex) =>
+            playerIndex == 0 && LegacyControllerCount > 0 &&
+            (UnityEngine.Input.GetKey(KeyCode.JoystickButton0) || UnityEngine.Input.GetKey(KeyCode.JoystickButton9));
+
+        public static bool ReadLegacyCancel(int playerIndex) =>
+            playerIndex == 0 && LegacyControllerCount > 0 && UnityEngine.Input.GetKey(KeyCode.JoystickButton1);
+
+        public static bool ReadLegacyDiagnostics(int playerIndex) =>
+            playerIndex == 0 && LegacyControllerCount > 0 && UnityEngine.Input.GetKey(KeyCode.JoystickButton11);
+
+        public static string[] GetLegacyControllerNames() => UnityEngine.Input.GetJoystickNames();
 
         public static string Describe(InputDevice device)
         {
