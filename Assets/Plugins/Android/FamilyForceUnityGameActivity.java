@@ -24,21 +24,6 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
         return identity.contains("xiaomi") || identity.contains("mitv");
     }
 
-    private static boolean isPlayStationController(InputDevice device) {
-        if (device == null) {
-            return false;
-        }
-
-        if (device.getVendorId() == 0x054c) {
-            return true;
-        }
-
-        String name = device.getName().toLowerCase(Locale.ROOT);
-        return name.contains("dualsense") || name.contains("dualshock") ||
-               name.contains("playstation") || name.contains("sony") ||
-               name.contains("wireless controller");
-    }
-
     private static boolean isLinuxGamepadScanCode(int scanCode) {
         return scanCode >= 304 && scanCode <= 318;
     }
@@ -64,13 +49,12 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
         }
     }
 
-    private static boolean isXiaomiPlayStationEvent(KeyEvent event) {
-        return isXiaomiHost() && isPlayStationController(event.getDevice()) &&
-               isLinuxGamepadScanCode(event.getScanCode());
+    private static boolean isXiaomiRawGamepadEvent(KeyEvent event) {
+        return isXiaomiHost() && isLinuxGamepadScanCode(event.getScanCode());
     }
 
     private static int normalizeKeyCode(KeyEvent event) {
-        if (!isXiaomiPlayStationEvent(event)) {
+        if (!isXiaomiRawGamepadEvent(event)) {
             return event.getKeyCode();
         }
 
@@ -83,7 +67,7 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
 
     private static boolean isControllerKey(KeyEvent event) {
         int keyCode = event.getKeyCode();
-        if (isXiaomiPlayStationEvent(event)) {
+        if (isXiaomiRawGamepadEvent(event)) {
             return true;
         }
         if (!isControllerSource(event.getSource())) {
