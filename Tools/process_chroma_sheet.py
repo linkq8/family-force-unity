@@ -8,8 +8,10 @@ from PIL import Image
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        raise SystemExit("usage: process_chroma_sheet.py INPUT OUTPUT")
+    if len(sys.argv) not in (3, 4):
+        raise SystemExit("usage: process_chroma_sheet.py INPUT OUTPUT [--reuse-first-as-fourth]")
+
+    reuse_first = len(sys.argv) == 4 and sys.argv[3] == "--reuse-first-as-fourth"
 
     source = Image.open(sys.argv[1]).convert("RGBA")
     side = min(source.size)
@@ -31,7 +33,8 @@ def main() -> None:
     cell = side // 4
     for row in range(4):
         for column in range(4):
-            frame = source.crop((column * cell, row * cell, (column + 1) * cell, (row + 1) * cell))
+            source_column = 0 if reuse_first and column == 3 else column
+            frame = source.crop((source_column * cell, row * cell, (source_column + 1) * cell, (row + 1) * cell))
             frame = frame.resize((256, 256), Image.Resampling.NEAREST)
             sheet.alpha_composite(frame, (column * 256, row * 256))
 

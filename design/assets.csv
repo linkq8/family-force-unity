@@ -1,7 +1,10 @@
 id,role,type,description,size/ratio,style line ref,source
-essa_model_sheet,hero reference,static sprite sheet,"original tall adult family hero; front, side, back, combat pose",1:1,design/style-formula.txt,built-in image generation
+essa_model_sheet,hero reference,static sprite sheet,"identity-preserved tall adult family hero; front, side, back, combat pose",1:1,design/style-formula.txt,parent/front.JPG + parent/three-quarter.png
 essa_idle,hero animation,spritesheet,"subtle ready stance breathing loop",128px cells,design/style-formula.txt,pending approved model sheet
 essa_walk,hero animation,spritesheet,"eight-direction-lane right-facing walk cycle",128px cells,design/style-formula.txt,pending approved model sheet
 essa_punch,hero animation,spritesheet,"fast right-facing straight punch",128px cells,design/style-formula.txt,pending approved model sheet
 essa_kick,hero animation,spritesheet,"clear right-facing waist-height kick",128px cells,design/style-formula.txt,pending approved model sheet
 essa_jump,hero animation,spritesheet,"compact arcade jump",128px cells,design/style-formula.txt,pending approved model sheet
+adam_identity,hero reference,static sprite,kid-1 identity reference,1:1,design/style-formula.txt,kid-1/front.jpg
+shaikha_identity,hero reference,static sprite,kid-2 identity reference,1:1,design/style-formula.txt,kid-2/front.PNG
+sulaiman_identity,hero reference,static sprite,kid-3 identity reference,1:1,design/style-formula.txt,kid-3/front.PNG
