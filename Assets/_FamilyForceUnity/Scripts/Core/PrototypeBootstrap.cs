@@ -12,6 +12,7 @@ namespace FamilyForceUnity.Core
     {
         [SerializeField] private MoveDefinition lightAttack;
         [SerializeField] private List<CharacterDefinition> roster = new();
+        [SerializeField] private List<Sprite> essaAnimationFrames = new();
 
         private readonly List<Texture2D> runtimeTextures = new();
         private readonly List<MoveDefinition> runtimeMoves = new();
@@ -19,10 +20,11 @@ namespace FamilyForceUnity.Core
 
         public IReadOnlyList<CharacterDefinition> Roster => roster;
 
-        public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions)
+        public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions, List<Sprite> essaFrames = null)
         {
             lightAttack = move;
             roster = definitions != null ? new List<CharacterDefinition>(definitions) : new List<CharacterDefinition>();
+            essaAnimationFrames = essaFrames != null ? new List<Sprite>(essaFrames) : new List<Sprite>();
         }
 
         private void Awake()
@@ -115,11 +117,20 @@ namespace FamilyForceUnity.Core
         {
             float heightScale = Mathf.Clamp(character.HeightCentimeters / 135f, 0.82f, 1.35f);
             var fighter = CreateBlock(label, position, new Vector2(0.65f, heightScale), character.PlaceholderColor, 10);
+            Sprite[] animatedFrames = null;
+            if (character.CharacterId == "essa" && essaAnimationFrames.Count >= 16)
+            {
+                animatedFrames = essaAnimationFrames.ToArray();
+                fighter.transform.localScale = Vector3.one;
+                var renderer = fighter.GetComponent<SpriteRenderer>();
+                renderer.sprite = animatedFrames[0];
+                renderer.color = Color.white;
+            }
             fighter.AddComponent<LaneMotor>();
             fighter.AddComponent<FighterStateMachine>();
             var punchVisual = CreatePunchVisual(fighter.transform, character.PlaceholderColor);
             var visual = fighter.AddComponent<PrototypeFighterVisual>();
-            visual.Configure(fighter.GetComponent<SpriteRenderer>(), punchVisual);
+            visual.Configure(fighter.GetComponent<SpriteRenderer>(), punchVisual, animatedFrames);
             var controller = fighter.AddComponent<PrototypeFighterController>();
             MoveDefinition kick = CreateMove(MoveId.Kick, 6, 4, 10, 14, 4, new Vector2(1.8f, 0.3f));
             MoveDefinition heavy = CreateMove(MoveId.HeavyPunch, 11, 4, 16, 24, 7, new Vector2(3f, 0.45f));

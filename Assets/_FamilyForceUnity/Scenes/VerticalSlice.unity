@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1727685536
+--- !u!1 &1389117736
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1727685538}
-  - component: {fileID: 1727685537}
+  - component: {fileID: 1389117738}
+  - component: {fileID: 1389117737}
   m_Layer: 0
   m_Name: "Family Force Unity \u2014 Prototype"
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1727685537
+--- !u!114 &1389117737
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1727685536}
+  m_GameObject: {fileID: 1389117736}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea35f469ad71842a792e9bee8bebc63c, type: 3}
@@ -154,13 +154,30 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 35b9e58ec9c314e15b5482cb845cf29e, type: 2}
   - {fileID: 11400000, guid: 5c187d2fb3edc437cbea17edea475142, type: 2}
   - {fileID: 11400000, guid: f67f9ecde98a2418692cbab5bad76e23, type: 2}
---- !u!4 &1727685538
+  essaAnimationFrames:
+  - {fileID: 1059552663396179504, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: 2708685155666372030, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: 4850941183354644100, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -2016669790627210337, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -3062856685845392205, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -2364112463283752027, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -2256038323181366907, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: 995995255883139570, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -6544735587548773704, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -8506434934431657153, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -8675349577299855416, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -5664580265683842560, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -6133787817650514418, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: -8581875716070108423, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: 274629307300697112, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+  - {fileID: 1802668045441117893, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
+--- !u!4 &1389117738
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1727685536}
+  m_GameObject: {fileID: 1389117736}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -173,4 +190,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1727685538}
+  - {fileID: 1389117738}

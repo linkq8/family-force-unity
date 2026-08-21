@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FamilyForceUnity.Combat;
 using FamilyForceUnity.Content;
 using FamilyForceUnity.Core;
@@ -15,6 +16,7 @@ namespace FamilyForceUnity.Editor
         private const string Root = "Assets/_FamilyForceUnity";
         private const string ScenePath = Root + "/Scenes/VerticalSlice.unity";
         private const string MovePath = Root + "/Content/Base/Move_Punch.asset";
+        private const string EssaSheetPath = Root + "/Art/Generated/Essa/essa-identity-basic-actions-runtime-f16-256x256-g4x4-fps10.png";
 
         [MenuItem("Tools/Family Force Unity/Build Vertical Slice Foundation")]
         public static void CreateVerticalSlice()
@@ -23,13 +25,14 @@ namespace FamilyForceUnity.Editor
             EnsureFolder(Root + "/Scenes");
 
             MoveDefinition punch = LoadOrCreateMove();
+            List<Sprite> essaFrames = ConfigureEssaSpriteSheet();
             List<CharacterDefinition> characters = CreateCharacters();
             CreateCustomerPack(characters);
             // Persist ScriptableObjects before serializing them into the scene.
             // Without this, Unity writes fileID: 0 references in a fresh project.
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            CreateScene(punch, characters);
+            CreateScene(punch, characters, essaFrames);
             ConfigureProject();
 
             AssetDatabase.SaveAssets();
@@ -73,6 +76,52 @@ namespace FamilyForceUnity.Editor
             move.Configure(MoveId.Punch, 5, 3, 8, 10, 4, new Vector2(1.5f, 0.2f));
             AssetDatabase.CreateAsset(move, MovePath);
             return move;
+        }
+
+        private static List<Sprite> ConfigureEssaSpriteSheet()
+        {
+            var importer = AssetImporter.GetAtPath(EssaSheetPath) as TextureImporter;
+            if (importer == null) return new List<Sprite>();
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = 160f;
+            importer.mipmapEnabled = false;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Compressed;
+            importer.alphaIsTransparency = true;
+            importer.isReadable = false;
+
+            var slices = new List<SpriteMetaData>(16);
+            string[] rows = { "idle", "walk", "punch", "kick" };
+            for (int row = 0; row < 4; row++)
+            {
+                for (int column = 0; column < 4; column++)
+                {
+                    slices.Add(new SpriteMetaData
+                    {
+                        name = $"essa_{rows[row]}_{column}",
+                        rect = new Rect(column * 256, (3 - row) * 256, 256, 256),
+                        pivot = new Vector2(0.5f, 0.05f),
+                        alignment = (int)SpriteAlignment.Custom
+                    });
+                }
+            }
+            importer.spritesheet = slices.ToArray();
+
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            android.overridden = true;
+            android.maxTextureSize = 1024;
+            android.format = TextureImporterFormat.ETC2_RGBA8;
+            android.textureCompression = TextureImporterCompression.Compressed;
+            importer.SetPlatformTextureSettings(android);
+            importer.SaveAndReimport();
+
+            return AssetDatabase.LoadAllAssetsAtPath(EssaSheetPath)
+                .OfType<Sprite>()
+                .OrderBy(sprite => System.Array.IndexOf(rows, sprite.name.Split('_')[1]))
+                .ThenBy(sprite => sprite.name)
+                .ToList();
         }
 
         private static List<CharacterDefinition> CreateCharacters()
@@ -120,12 +169,12 @@ namespace FamilyForceUnity.Editor
             serializedPack.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters)
+        private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters, List<Sprite> essaFrames)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("Family Force Unity — Prototype");
             var bootstrap = root.AddComponent<PrototypeBootstrap>();
-            bootstrap.ConfigureContent(punch, characters);
+            bootstrap.ConfigureContent(punch, characters, essaFrames);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.MarkSceneDirty(scene);
 
@@ -137,8 +186,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.5.0";
-            PlayerSettings.Android.bundleVersionCode = 15;
+            PlayerSettings.bundleVersion = "0.6.0";
+            PlayerSettings.Android.bundleVersionCode = 16;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

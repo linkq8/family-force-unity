@@ -10,20 +10,30 @@ namespace FamilyForceUnity.Characters
         private GameObject punchVisual;
         private Vector3 baseScale;
         private Color baseColor;
+        private Sprite[] animationFrames;
+        private float lastX;
 
-        public void Configure(SpriteRenderer bodyRenderer, GameObject punchObject)
+        public void Configure(SpriteRenderer bodyRenderer, GameObject punchObject, Sprite[] frames = null)
         {
             fighter = GetComponent<FighterStateMachine>();
             body = bodyRenderer;
             punchVisual = punchObject;
             baseScale = transform.localScale;
             baseColor = body != null ? body.color : Color.white;
+            animationFrames = frames;
+            lastX = transform.position.x;
             if (punchVisual != null) punchVisual.SetActive(false);
         }
 
         private void LateUpdate()
         {
             if (fighter == null || body == null) return;
+
+            if (animationFrames is { Length: >= 16 })
+            {
+                UpdateSpriteAnimation();
+                return;
+            }
 
             if (fighter.State != FighterState.Attack || fighter.CurrentMove == null)
             {
@@ -76,6 +86,39 @@ namespace FamilyForceUnity.Characters
                 };
                 punchVisual.transform.localScale = new Vector3(0.5f * effectScale, 0.28f * effectScale, 1f);
             }
+        }
+
+        private void UpdateSpriteAnimation()
+        {
+            float deltaX = transform.position.x - lastX;
+            if (Mathf.Abs(deltaX) > 0.001f) body.flipX = deltaX < 0f;
+            lastX = transform.position.x;
+
+            int frame;
+            if (fighter.State == FighterState.Attack && fighter.CurrentMove != null)
+            {
+                int rowStart = fighter.CurrentMove.Id switch
+                {
+                    MoveId.Punch => 8,
+                    MoveId.Kick => 12,
+                    _ => 0
+                };
+                float progress = fighter.StateTick / (float)Mathf.Max(1, fighter.CurrentMove.TotalTicks);
+                frame = rowStart + Mathf.Clamp(Mathf.FloorToInt(progress * 4f), 0, 3);
+            }
+            else if (fighter.State == FighterState.Walk)
+            {
+                frame = 4 + Mathf.FloorToInt(Time.time * 10f) % 4;
+            }
+            else
+            {
+                frame = Mathf.FloorToInt(Time.time * 6f) % 4;
+            }
+
+            body.sprite = animationFrames[frame];
+            body.color = Color.white;
+            transform.localScale = baseScale;
+            if (punchVisual != null) punchVisual.SetActive(false);
         }
     }
 }
