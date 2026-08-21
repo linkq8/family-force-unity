@@ -102,9 +102,13 @@ namespace FamilyForceUnity.Input
         public static Vector2 ReadLegacyMovement(int playerIndex)
         {
             if (playerIndex != 0 || LegacyControllerCount == 0) return Vector2.zero;
-            return Vector2.ClampMagnitude(new Vector2(
+            Vector2 stick = new Vector2(
                 UnityEngine.Input.GetAxisRaw("Horizontal"),
-                UnityEngine.Input.GetAxisRaw("Vertical")), 1f);
+                UnityEngine.Input.GetAxisRaw("Vertical"));
+            Vector2 dpad = new Vector2(
+                UnityEngine.Input.GetAxisRaw("Debug Horizontal"),
+                -UnityEngine.Input.GetAxisRaw("Debug Vertical"));
+            return Vector2.ClampMagnitude(dpad.sqrMagnitude > stick.sqrMagnitude ? dpad : stick, 1f);
         }
 
         public static bool ReadLegacyConfirm(int playerIndex) =>

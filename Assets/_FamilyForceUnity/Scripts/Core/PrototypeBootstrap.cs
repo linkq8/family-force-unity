@@ -113,8 +113,24 @@ namespace FamilyForceUnity.Core
             var fighter = CreateBlock(label, position, new Vector2(0.65f, heightScale), character.PlaceholderColor, 10);
             fighter.AddComponent<LaneMotor>();
             fighter.AddComponent<FighterStateMachine>();
+            var punchVisual = CreatePunchVisual(fighter.transform, character.PlaceholderColor);
+            var visual = fighter.AddComponent<PrototypeFighterVisual>();
+            visual.Configure(fighter.GetComponent<SpriteRenderer>(), punchVisual);
             var controller = fighter.AddComponent<PrototypeFighterController>();
             controller.Configure(playerIndex, lightAttack);
+        }
+
+        private GameObject CreatePunchVisual(Transform parent, Color characterColor)
+        {
+            var punch = new GameObject("Punch — Active Frames");
+            punch.transform.SetParent(parent, false);
+            punch.transform.localPosition = new Vector3(0.78f, 0.08f, -0.05f);
+            punch.transform.localScale = new Vector3(0.5f, 0.28f, 1f);
+            var renderer = punch.AddComponent<SpriteRenderer>();
+            renderer.sprite = CreateSolidSprite(Color.Lerp(characterColor, Color.white, 0.65f));
+            renderer.sortingOrder = 12;
+            punch.SetActive(false);
+            return punch;
         }
 
         private void CreateEnemy(string label, Vector2 position, Color color)

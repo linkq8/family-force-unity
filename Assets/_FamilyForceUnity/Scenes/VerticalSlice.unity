@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1211240869
+--- !u!1 &495922192
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1211240871}
-  - component: {fileID: 1211240870}
+  - component: {fileID: 495922194}
+  - component: {fileID: 495922193}
   m_Layer: 0
   m_Name: "Family Force Unity \u2014 Prototype"
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1211240870
+--- !u!114 &495922193
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1211240869}
+  m_GameObject: {fileID: 495922192}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea35f469ad71842a792e9bee8bebc63c, type: 3}
@@ -154,13 +154,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 35b9e58ec9c314e15b5482cb845cf29e, type: 2}
   - {fileID: 11400000, guid: 5c187d2fb3edc437cbea17edea475142, type: 2}
   - {fileID: 11400000, guid: f67f9ecde98a2418692cbab5bad76e23, type: 2}
---- !u!4 &1211240871
+--- !u!4 &495922194
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1211240869}
+  m_GameObject: {fileID: 495922192}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -173,4 +173,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1211240871}
+  - {fileID: 495922194}
