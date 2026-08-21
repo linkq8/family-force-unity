@@ -62,6 +62,21 @@ namespace FamilyForceUnity.Combat
             return move;
         }
 
+        public static MoveDefinition CreateRuntime(MoveId moveId, int startup, int active, int recovery,
+            int moveDamage, int pause, Vector2 force)
+        {
+            var move = CreateInstance<MoveDefinition>();
+            move.id = moveId;
+            move.startupTicks = startup;
+            move.activeTicks = active;
+            move.recoveryTicks = recovery;
+            move.damage = moveDamage;
+            move.hitPauseTicks = pause;
+            move.knockback = force;
+            move.name = $"Runtime_{moveId}";
+            return move;
+        }
+
 #if UNITY_EDITOR
         public void Configure(MoveId moveId, int startup, int active, int recovery, int moveDamage, int pause, Vector2 force)
         {

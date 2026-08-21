@@ -14,6 +14,7 @@ namespace FamilyForceUnity.Core
         [SerializeField] private List<CharacterDefinition> roster = new();
 
         private readonly List<Texture2D> runtimeTextures = new();
+        private readonly List<MoveDefinition> runtimeMoves = new();
         private bool matchStarted;
 
         public IReadOnlyList<CharacterDefinition> Roster => roster;
@@ -79,6 +80,8 @@ namespace FamilyForceUnity.Core
             foreach (var texture in runtimeTextures)
                 if (texture != null) Destroy(texture);
             if (lightAttack != null && lightAttack.name == "Runtime_Punch") Destroy(lightAttack);
+            foreach (var move in runtimeMoves)
+                if (move != null) Destroy(move);
             foreach (var character in roster)
                 if (character != null && character.name.StartsWith("Runtime_")) Destroy(character);
         }
@@ -118,7 +121,19 @@ namespace FamilyForceUnity.Core
             var visual = fighter.AddComponent<PrototypeFighterVisual>();
             visual.Configure(fighter.GetComponent<SpriteRenderer>(), punchVisual);
             var controller = fighter.AddComponent<PrototypeFighterController>();
-            controller.Configure(playerIndex, lightAttack);
+            MoveDefinition kick = CreateMove(MoveId.Kick, 6, 4, 10, 14, 4, new Vector2(1.8f, 0.3f));
+            MoveDefinition heavy = CreateMove(MoveId.HeavyPunch, 11, 4, 16, 24, 7, new Vector2(3f, 0.45f));
+            MoveDefinition jump = CreateMove(MoveId.Jump, 2, 20, 4, 0, 0, Vector2.zero);
+            MoveDefinition special = CreateMove(MoveId.Special, 8, 9, 22, 34, 9, new Vector2(4f, 0.7f));
+            controller.Configure(playerIndex, lightAttack, kick, heavy, jump, special);
+        }
+
+        private MoveDefinition CreateMove(MoveId id, int startup, int active, int recovery,
+            int damage, int pause, Vector2 knockback)
+        {
+            MoveDefinition move = MoveDefinition.CreateRuntime(id, startup, active, recovery, damage, pause, knockback);
+            runtimeMoves.Add(move);
+            return move;
         }
 
         private GameObject CreatePunchVisual(Transform parent, Color characterColor)

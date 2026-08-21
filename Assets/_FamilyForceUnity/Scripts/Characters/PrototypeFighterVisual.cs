@@ -1,3 +1,4 @@
+using FamilyForceUnity.Combat;
 using UnityEngine;
 
 namespace FamilyForceUnity.Characters
@@ -43,8 +44,19 @@ namespace FamilyForceUnity.Characters
             }
             else if (active)
             {
-                transform.localScale = new Vector3(baseScale.x * 1.16f, baseScale.y * 0.94f, baseScale.z);
-                body.color = Color.Lerp(baseColor, new Color(1f, 0.82f, 0.25f), 0.55f);
+                MoveId id = fighter.CurrentMove.Id;
+                float width = id == MoveId.Special ? 1.35f : id == MoveId.HeavyPunch ? 1.25f : 1.16f;
+                float height = id == MoveId.Kick ? 0.82f : id == MoveId.Jump ? 1.18f : 0.94f;
+                transform.localScale = new Vector3(baseScale.x * width, baseScale.y * height, baseScale.z);
+                Color flash = id switch
+                {
+                    MoveId.Kick => new Color(0.3f, 1f, 0.55f),
+                    MoveId.HeavyPunch => new Color(1f, 0.35f, 0.2f),
+                    MoveId.Jump => new Color(0.4f, 0.85f, 1f),
+                    MoveId.Special => new Color(0.85f, 0.35f, 1f),
+                    _ => new Color(1f, 0.82f, 0.25f)
+                };
+                body.color = Color.Lerp(baseColor, flash, 0.65f);
             }
             else
             {
@@ -52,7 +64,18 @@ namespace FamilyForceUnity.Characters
                 body.color = Color.Lerp(body.color, baseColor, 0.35f);
             }
 
-            if (punchVisual != null) punchVisual.SetActive(active);
+            if (punchVisual != null)
+            {
+                punchVisual.SetActive(active && fighter.CurrentMove.Id != MoveId.Jump);
+                float effectScale = fighter.CurrentMove.Id switch
+                {
+                    MoveId.Special => 2.1f,
+                    MoveId.HeavyPunch => 1.55f,
+                    MoveId.Kick => 1.3f,
+                    _ => 1f
+                };
+                punchVisual.transform.localScale = new Vector3(0.5f * effectScale, 0.28f * effectScale, 1f);
+            }
         }
     }
 }

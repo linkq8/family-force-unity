@@ -9,9 +9,15 @@ namespace FamilyForceUnity.Input
     {
         private int playerIndex;
         private MoveDefinition lightAttack;
+        private MoveDefinition kick;
+        private MoveDefinition heavyAttack;
+        private MoveDefinition jump;
+        private MoveDefinition special;
         private LaneMotor motor;
         private FighterStateMachine fighter;
         private bool attackHeld;
+        private MoveDefinition activeInputMove;
+        private bool hitApplied;
 
         private void Awake()
         {
@@ -19,10 +25,15 @@ namespace FamilyForceUnity.Input
             fighter = GetComponent<FighterStateMachine>();
         }
 
-        public void Configure(int index, MoveDefinition attack)
+        public void Configure(int index, MoveDefinition attack, MoveDefinition kickMove,
+            MoveDefinition heavyMove, MoveDefinition jumpMove, MoveDefinition specialMove)
         {
             playerIndex = Mathf.Clamp(index, 0, 1);
             lightAttack = attack;
+            kick = kickMove;
+            heavyAttack = heavyMove;
+            jump = jumpMove;
+            special = specialMove;
         }
 
         private void FixedUpdate()
@@ -33,10 +44,27 @@ namespace FamilyForceUnity.Input
                 motor.SimulateMove(movement);
             fighter.SetWalking(canWalk && movement.sqrMagnitude > 0.01f);
 
-            bool attackPressed = ReadAttack();
-            if (attackPressed && !attackHeld)
-                fighter.TryAttack(lightAttack);
+            MoveDefinition requestedMove = ReadRequestedMove();
+            bool attackPressed = requestedMove != null;
+            if (attackPressed && !attackHeld && fighter.TryAttack(requestedMove))
+            {
+                activeInputMove = requestedMove;
+                hitApplied = false;
+            }
             attackHeld = attackPressed;
+
+            if (!hitApplied && fighter.IsMoveActive)
+            {
+                ApplyHit(activeInputMove);
+                hitApplied = true;
+            }
+
+            if (fighter.CurrentMove != null && fighter.CurrentMove.Id == MoveId.Jump)
+            {
+                float progress = fighter.StateTick / (float)Mathf.Max(1, fighter.CurrentMove.TotalTicks);
+                motor.SetVisualHeight(Mathf.Sin(Mathf.Clamp01(progress) * Mathf.PI) * 0.9f);
+            }
+            else motor.SetVisualHeight(0f);
         }
 
         private Vector2 ReadMovement()
@@ -66,13 +94,31 @@ namespace FamilyForceUnity.Input
             return Vector2.ClampMagnitude(value, 1f);
         }
 
-        private bool ReadAttack()
+        private MoveDefinition ReadRequestedMove()
         {
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            bool controllerPressed = ControllerDeviceRouter.ReadPlayerLightAttack(playerIndex);
-            return keyboardPressed || controllerPressed;
+            if (keyboardPressed || ControllerDeviceRouter.ReadPlayerLightAttack(playerIndex)) return lightAttack;
+            if (ControllerDeviceRouter.ReadPlayerKick(playerIndex)) return kick;
+            if (ControllerDeviceRouter.ReadPlayerHeavyAttack(playerIndex)) return heavyAttack;
+            if (ControllerDeviceRouter.ReadPlayerJump(playerIndex)) return jump;
+            if (ControllerDeviceRouter.ReadPlayerSpecial(playerIndex)) return special;
+            return null;
+        }
+
+        private void ApplyHit(MoveDefinition move)
+        {
+            if (move == null || move.Id == MoveId.Jump) return;
+            float reach = move.Id == MoveId.Special ? 2.2f : move.Id == MoveId.HeavyPunch ? 1.6f : 1.15f;
+            foreach (var enemy in FindObjectsByType<FamilyForceUnity.AI.PrototypeEnemy>(FindObjectsSortMode.None))
+            {
+                Vector2 delta = enemy.transform.position - transform.position;
+                if (delta.x < -0.35f || delta.x > reach || Mathf.Abs(delta.y) > 0.8f) continue;
+                var target = enemy.GetComponent<FighterStateMachine>();
+                target.ApplyHit(move.Damage, move.HitPauseTicks, move.Id is MoveId.HeavyPunch or MoveId.Special);
+                enemy.GetComponent<LaneMotor>().ApplyKnockback(new Vector2(move.Knockback.x * 0.22f, move.Knockback.y * 0.12f));
+            }
         }
     }
 }

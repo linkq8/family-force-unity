@@ -46,6 +46,10 @@ namespace FamilyForceUnity.Characters
             {
                 Enter(FighterState.Idle);
             }
+            else if (state == FighterState.Hurt && stateTick >= 12)
+            {
+                Enter(FighterState.Idle);
+            }
         }
 
         public bool TryAttack(MoveDefinition move)
@@ -73,7 +77,7 @@ namespace FamilyForceUnity.Characters
 
         private void Enter(FighterState next)
         {
-            if (state == next && next != FighterState.Attack)
+            if (state == next && next != FighterState.Attack && next != FighterState.Hurt)
                 return;
 
             state = next;
@@ -83,4 +87,3 @@ namespace FamilyForceUnity.Characters
         }
     }
 }
-

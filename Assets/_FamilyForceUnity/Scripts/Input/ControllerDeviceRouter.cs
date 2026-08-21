@@ -55,6 +55,32 @@ namespace FamilyForceUnity.Input
             return ReadLegacyConfirm(playerIndex);
         }
 
+        public static bool ReadPlayerKick(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadNorth(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonEast.isPressed;
+        }
+
+        public static bool ReadPlayerHeavyAttack(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadWest(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonNorth.isPressed;
+        }
+
+        public static bool ReadPlayerJump(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadEast(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonSouth.isPressed;
+        }
+
+        public static bool ReadPlayerSpecial(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadR1(playerIndex) || AndroidNativeInputBridge.ReadL1(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad &&
+                (gamepad.rightShoulder.isPressed || gamepad.leftShoulder.isPressed);
+        }
+
         public static bool ReadPlayerDiagnostics(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)

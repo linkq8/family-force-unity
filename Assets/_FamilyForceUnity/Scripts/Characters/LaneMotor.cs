@@ -30,6 +30,14 @@ namespace FamilyForceUnity.Characters
         {
             VisualHeight = Mathf.Max(0f, height);
         }
+
+        public void ApplyKnockback(Vector2 force)
+        {
+            GroundPosition += force;
+            GroundPosition = new Vector2(
+                Mathf.Clamp(GroundPosition.x, horizontalBounds.x, horizontalBounds.y),
+                Mathf.Clamp(GroundPosition.y, depthBounds.x, depthBounds.y));
+            transform.position = new Vector3(GroundPosition.x, GroundPosition.y + VisualHeight, GroundPosition.y);
+        }
     }
 }
-
