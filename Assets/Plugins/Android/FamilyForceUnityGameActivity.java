@@ -39,18 +39,59 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
                name.contains("wireless controller");
     }
 
-    private static int normalizeKeyCode(InputDevice device, int keyCode) {
-        if (!isXiaomiHost() || !isPlayStationController(device)) {
-            return keyCode;
+    private static boolean isLinuxGamepadScanCode(int scanCode) {
+        return scanCode >= 304 && scanCode <= 318;
+    }
+
+    private static int mapAospGamepadScanCode(int scanCode) {
+        switch (scanCode) {
+            case 304: return KeyEvent.KEYCODE_BUTTON_A;
+            case 305: return KeyEvent.KEYCODE_BUTTON_B;
+            case 306: return KeyEvent.KEYCODE_BUTTON_C;
+            case 307: return KeyEvent.KEYCODE_BUTTON_X;
+            case 308: return KeyEvent.KEYCODE_BUTTON_Y;
+            case 309: return KeyEvent.KEYCODE_BUTTON_Z;
+            case 310: return KeyEvent.KEYCODE_BUTTON_L1;
+            case 311: return KeyEvent.KEYCODE_BUTTON_R1;
+            case 312: return KeyEvent.KEYCODE_BUTTON_L2;
+            case 313: return KeyEvent.KEYCODE_BUTTON_R2;
+            case 314: return KeyEvent.KEYCODE_BUTTON_SELECT;
+            case 315: return KeyEvent.KEYCODE_BUTTON_START;
+            case 316: return KeyEvent.KEYCODE_BUTTON_MODE;
+            case 317: return KeyEvent.KEYCODE_BUTTON_THUMBL;
+            case 318: return KeyEvent.KEYCODE_BUTTON_THUMBR;
+            default: return KeyEvent.KEYCODE_UNKNOWN;
+        }
+    }
+
+    private static boolean isXiaomiPlayStationEvent(KeyEvent event) {
+        return isXiaomiHost() && isPlayStationController(event.getDevice()) &&
+               isLinuxGamepadScanCode(event.getScanCode());
+    }
+
+    private static int normalizeKeyCode(KeyEvent event) {
+        if (!isXiaomiPlayStationEvent(event)) {
+            return event.getKeyCode();
         }
 
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_A) {
-            return KeyEvent.KEYCODE_BUTTON_X;
+        int mappedKeyCode = mapAospGamepadScanCode(event.getScanCode());
+        if (mappedKeyCode == KeyEvent.KEYCODE_UNKNOWN) {
+            return event.getKeyCode();
         }
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_X) {
-            return KeyEvent.KEYCODE_BUTTON_A;
+        return mappedKeyCode;
+    }
+
+    private static boolean isControllerKey(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        if (isXiaomiPlayStationEvent(event)) {
+            return true;
         }
-        return keyCode;
+        if (!isControllerSource(event.getSource())) {
+            return false;
+        }
+        return KeyEvent.isGamepadButton(keyCode) ||
+               keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
+               keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
     }
 
     @Override
@@ -73,13 +114,8 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        int rawKeyCode = event.getKeyCode();
-        boolean controllerKey = isControllerSource(event.getSource()) &&
-                (KeyEvent.isGamepadButton(rawKeyCode) ||
-                 rawKeyCode == KeyEvent.KEYCODE_DPAD_UP || rawKeyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
-                 rawKeyCode == KeyEvent.KEYCODE_DPAD_LEFT || rawKeyCode == KeyEvent.KEYCODE_DPAD_RIGHT);
-        if (controllerKey) {
-            int keyCode = normalizeKeyCode(event.getDevice(), rawKeyCode);
+        if (isControllerKey(event)) {
+            int keyCode = normalizeKeyCode(event);
             String payload = event.getDeviceId() + "|" + keyCode + "|" +
                     (event.getAction() == KeyEvent.ACTION_DOWN ? "1" : "0");
             UnityPlayer.UnitySendMessage(RECEIVER, "OnNativeKey", payload);
