@@ -95,16 +95,26 @@ namespace FamilyForceUnity.Characters
             lastX = transform.position.x;
 
             int frame;
-            if (fighter.State == FighterState.Attack && fighter.CurrentMove != null)
+            bool attacking = fighter.State == FighterState.Attack && fighter.CurrentMove != null;
+            bool active = false;
+            MoveId moveId = MoveId.Punch;
+            if (attacking)
             {
-                int rowStart = fighter.CurrentMove.Id switch
+                moveId = fighter.CurrentMove.Id;
+                int rowStart = moveId switch
                 {
                     MoveId.Punch => 8,
                     MoveId.Kick => 12,
+                    MoveId.HeavyPunch => 8,
+                    MoveId.Special => 8,
+                    MoveId.Jump => 12,
                     _ => 0
                 };
                 float progress = fighter.StateTick / (float)Mathf.Max(1, fighter.CurrentMove.TotalTicks);
                 frame = rowStart + Mathf.Clamp(Mathf.FloorToInt(progress * 4f), 0, 3);
+                int activeStart = fighter.CurrentMove.StartupTicks;
+                active = fighter.StateTick >= activeStart &&
+                    fighter.StateTick < activeStart + fighter.CurrentMove.ActiveTicks;
             }
             else if (fighter.State == FighterState.Walk)
             {
@@ -116,9 +126,29 @@ namespace FamilyForceUnity.Characters
             }
 
             body.sprite = animationFrames[frame];
-            body.color = Color.white;
-            transform.localScale = baseScale;
-            if (punchVisual != null) punchVisual.SetActive(false);
+            Color actionColor = moveId switch
+            {
+                MoveId.HeavyPunch => new Color(1f, 0.42f, 0.24f),
+                MoveId.Jump => new Color(0.45f, 0.88f, 1f),
+                MoveId.Special => new Color(0.9f, 0.42f, 1f),
+                _ => Color.white
+            };
+            body.color = attacking && active ? actionColor : Color.white;
+            float scale = attacking && active && moveId == MoveId.HeavyPunch ? 1.08f : 1f;
+            transform.localScale = new Vector3(baseScale.x * scale, baseScale.y * scale, baseScale.z);
+            if (punchVisual != null)
+            {
+                bool showEffect = attacking && active && moveId != MoveId.Jump;
+                punchVisual.SetActive(showEffect);
+                float effectScale = moveId switch
+                {
+                    MoveId.Special => 2.1f,
+                    MoveId.HeavyPunch => 1.55f,
+                    MoveId.Kick => 1.3f,
+                    _ => 1f
+                };
+                punchVisual.transform.localScale = new Vector3(0.5f * effectScale, 0.28f * effectScale, 1f);
+            }
         }
     }
 }

@@ -26,6 +26,8 @@ namespace FamilyForceUnity.Core
         private bool confirmHeld;
         private bool cancelHeld;
         private bool diagnosticsHeld;
+        private bool pauseHeld;
+        private bool isPaused;
         private bool axisHeld;
         private string statusMessage;
         private int titleFocus;
@@ -47,13 +49,21 @@ namespace FamilyForceUnity.Core
         {
             if (bootstrap == null) return;
 
-            bool diagnostics = ReadDiagnostics();
+            bool diagnostics = ReadDiagnostics() || ControllerDeviceRouter.ReadPlayerShare(0);
             if (diagnostics && !diagnosticsHeld)
             {
                 var overlay = FindFirstObjectByType<ControllerDiagnosticsOverlay>();
                 if (overlay != null) overlay.IsVisible = !overlay.IsVisible;
             }
             diagnosticsHeld = diagnostics;
+
+            bool pause = ControllerDeviceRouter.ReadPlayerPause(0);
+            if (state == FrontendState.Playing && pause && !pauseHeld)
+            {
+                isPaused = !isPaused;
+                Time.timeScale = isPaused ? 0f : 1f;
+            }
+            pauseHeld = pause;
 
             if (state == FrontendState.Playing) return;
 
@@ -133,11 +143,29 @@ namespace FamilyForceUnity.Core
 
         private void OnGUI()
         {
-            if (state == FrontendState.Playing) return;
             BuildStyles();
+            if (state == FrontendState.Playing)
+            {
+                if (isPaused) DrawPauseOverlay();
+                return;
+            }
             DrawBackdrop();
             if (state == FrontendState.Title) DrawTitle();
             else DrawCharacterSelect();
+        }
+
+        private void DrawPauseOverlay()
+        {
+            DrawSolid(new Rect(0, 0, Screen.width, Screen.height), new Color(0.015f, 0.02f, 0.055f, 0.82f));
+            float width = Mathf.Min(Screen.width * 0.8f, 760f);
+            float left = (Screen.width - width) * 0.5f;
+            GUI.Label(new Rect(left, Screen.height * 0.35f, width, 80f), "PAUSED", titleStyle);
+            GUI.Label(new Rect(left, Screen.height * 0.53f, width, 40f), "Press START to continue", headingStyle);
+        }
+
+        private void OnDestroy()
+        {
+            if (isPaused) Time.timeScale = 1f;
         }
 
         private void DrawBackdrop()

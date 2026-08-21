@@ -88,6 +88,20 @@ namespace FamilyForceUnity.Input
             return ReadLegacyDiagnostics(playerIndex);
         }
 
+        public static bool ReadPlayerPause(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadStart(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad && gamepad.startButton.isPressed;
+        }
+
+        public static bool ReadPlayerShare(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadSelect(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad && gamepad.selectButton.isPressed;
+        }
+
         public static int LegacyControllerCount
         {
             get
