@@ -62,27 +62,17 @@ namespace FamilyForceUnity.Input
         public static bool ReadConfirm(InputDevice device)
         {
             if (device is Gamepad gamepad)
-                return gamepad.buttonSouth.isPressed || gamepad.startButton.isPressed;
+                return gamepad.buttonSouth.isPressed;
 
             if (device is Joystick joystick)
-            {
-                if (joystick.trigger != null && joystick.trigger.isPressed)
-                    return true;
-
-                foreach (InputControl control in joystick.allControls)
-                {
-                    if (control is ButtonControl button && button.isPressed)
-                        return true;
-                }
-            }
+                return joystick.trigger != null && joystick.trigger.isPressed;
 
             if (device != null)
             {
-                foreach (InputControl control in device.allControls)
-                {
-                    if (control is ButtonControl button && button.isPressed)
-                        return true;
-                }
+                ButtonControl south = device.TryGetChildControl<ButtonControl>("buttonSouth") ??
+                    device.TryGetChildControl<ButtonControl>("button0") ??
+                    device.TryGetChildControl<ButtonControl>("trigger");
+                return south != null && south.isPressed;
             }
 
             return false;
@@ -106,8 +96,8 @@ namespace FamilyForceUnity.Input
                 UnityEngine.Input.GetAxisRaw("Horizontal"),
                 UnityEngine.Input.GetAxisRaw("Vertical"));
             Vector2 dpad = new Vector2(
-                UnityEngine.Input.GetAxisRaw("Debug Horizontal"),
-                -UnityEngine.Input.GetAxisRaw("Debug Vertical"));
+                UnityEngine.Input.GetAxisRaw("Debug Vertical"),
+                -UnityEngine.Input.GetAxisRaw("Debug Horizontal"));
             return Vector2.ClampMagnitude(dpad.sqrMagnitude > stick.sqrMagnitude ? dpad : stick, 1f);
         }
 
