@@ -60,13 +60,24 @@ namespace FamilyForceUnity.Input
             }
 
             InputDevice controller = ControllerDeviceRouter.GetController(playerIndex);
-            Vector2 controllerValue = ControllerDeviceRouter.ReadMovement(controller);
+            Vector2 controllerValue = playerIndex == 0 && ControllerCalibrationProfile.IsComplete
+                ? ControllerCalibrationProfile.ReadMovement()
+                : ControllerDeviceRouter.ReadMovement(controller);
+            if (playerIndex == 0 && ControllerCalibrationProfile.IsComplete)
+            {
+                Vector2 analogValue = ControllerDeviceRouter.ReadAnalogMovement(controller);
+                if (analogValue.sqrMagnitude > controllerValue.sqrMagnitude)
+                    controllerValue = analogValue;
+            }
             if (controllerValue.sqrMagnitude > value.sqrMagnitude)
                 value = controllerValue;
 
-            Vector2 legacyValue = ControllerDeviceRouter.ReadLegacyMovement(playerIndex);
-            if (legacyValue.sqrMagnitude > value.sqrMagnitude)
-                value = legacyValue;
+            if (!ControllerCalibrationProfile.IsComplete)
+            {
+                Vector2 legacyValue = ControllerDeviceRouter.ReadLegacyMovement(playerIndex);
+                if (legacyValue.sqrMagnitude > value.sqrMagnitude)
+                    value = legacyValue;
+            }
 
             return Vector2.ClampMagnitude(value, 1f);
         }
@@ -76,8 +87,11 @@ namespace FamilyForceUnity.Input
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            bool controllerPressed = ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex));
-            return keyboardPressed || controllerPressed || ControllerDeviceRouter.ReadLegacyConfirm(playerIndex);
+            bool controllerPressed = playerIndex == 0 && ControllerCalibrationProfile.IsComplete
+                ? ControllerCalibrationProfile.ReadAttack()
+                : ControllerDeviceRouter.ReadConfirm(ControllerDeviceRouter.GetController(playerIndex)) ||
+                    ControllerDeviceRouter.ReadLegacyConfirm(playerIndex);
+            return keyboardPressed || controllerPressed;
         }
     }
 }

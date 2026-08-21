@@ -59,6 +59,18 @@ namespace FamilyForceUnity.Input
             return Vector2.zero;
         }
 
+        public static Vector2 ReadAnalogMovement(InputDevice device)
+        {
+            if (device is Gamepad gamepad)
+                return Vector2.ClampMagnitude(gamepad.leftStick.ReadValue(), 1f);
+            if (device is Joystick joystick)
+                return Vector2.ClampMagnitude(joystick.stick.ReadValue(), 1f);
+            if (device == null) return Vector2.zero;
+            Vector2Control stick = device.TryGetChildControl<Vector2Control>("leftStick") ??
+                device.TryGetChildControl<Vector2Control>("stick");
+            return stick != null ? Vector2.ClampMagnitude(stick.ReadValue(), 1f) : Vector2.zero;
+        }
+
         public static bool ReadConfirm(InputDevice device)
         {
             if (device is Gamepad gamepad)
