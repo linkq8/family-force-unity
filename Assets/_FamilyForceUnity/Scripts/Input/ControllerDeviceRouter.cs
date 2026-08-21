@@ -33,21 +33,27 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerConfirm(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadEast(playerIndex);
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadEast(playerIndex)
+                    : AndroidNativeInputBridge.ReadSouth(playerIndex);
             return ReadConfirm(GetController(playerIndex)) || ReadLegacyConfirm(playerIndex);
         }
 
         public static bool ReadPlayerCancel(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadNorth(playerIndex);
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadNorth(playerIndex)
+                    : AndroidNativeInputBridge.ReadEast(playerIndex);
             return ReadCancel(GetController(playerIndex)) || ReadLegacyCancel(playerIndex);
         }
 
         public static bool ReadPlayerLightAttack(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadSouth(playerIndex);
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadSouth(playerIndex)
+                    : AndroidNativeInputBridge.ReadNorth(playerIndex);
 
             InputDevice device = GetController(playerIndex);
             if (device is Gamepad gamepad)
@@ -57,19 +63,28 @@ namespace FamilyForceUnity.Input
 
         public static bool ReadPlayerKick(int playerIndex)
         {
-            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadNorth(playerIndex);
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadNorth(playerIndex)
+                    : AndroidNativeInputBridge.ReadWest(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonEast.isPressed;
         }
 
         public static bool ReadPlayerHeavyAttack(int playerIndex)
         {
-            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadWest(playerIndex);
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadWest(playerIndex)
+                    : AndroidNativeInputBridge.ReadEast(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonNorth.isPressed;
         }
 
         public static bool ReadPlayerJump(int playerIndex)
         {
-            if (AndroidNativeInputBridge.IsActive) return AndroidNativeInputBridge.ReadEast(playerIndex);
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadEast(playerIndex)
+                    : AndroidNativeInputBridge.ReadSouth(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonSouth.isPressed;
         }
 
@@ -209,6 +224,14 @@ namespace FamilyForceUnity.Input
             (UnityEngine.Input.GetKey(KeyCode.JoystickButton9) || UnityEngine.Input.GetKey(KeyCode.JoystickButton11));
 
         public static string[] GetLegacyControllerNames() => UnityEngine.Input.GetJoystickNames();
+
+        public static string DescribeAutomaticProfile(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return $"AUTO PROFILE — {AndroidNativeInputBridge.DescribePlayer(playerIndex)}";
+            InputDevice device = GetController(playerIndex);
+            return device == null ? "AUTO PROFILE — Android TV remote / keyboard" : $"AUTO PROFILE — {Describe(device)}";
+        }
 
         public static string DescribeLegacyState()
         {

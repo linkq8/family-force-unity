@@ -11,6 +11,9 @@ namespace FamilyForceUnity.Input
             public Vector2 LeftStick;
             public Vector2 Dpad;
             public readonly HashSet<int> Buttons = new();
+            public string HostFamily = "ANDROID";
+            public string ControllerFamily = "GENERIC";
+            public string Description = "Android controller";
         }
 
         private static readonly Dictionary<int, ControllerState> States = new();
@@ -50,6 +53,23 @@ namespace FamilyForceUnity.Input
             else if (keyCode == 22) SetDpadKey(state, Vector2.right, pressed);
         }
 
+        public void OnNativeDevice(string payload)
+        {
+            string[] values = payload.Split('|');
+            if (values.Length < 8 || !int.TryParse(values[0], out int deviceId)) return;
+            ControllerState state = GetOrAdd(deviceId);
+            state.HostFamily = values[1];
+            string name = values[4];
+            int.TryParse(values[5], out int vendorId);
+            string identity = $"{name} {values[7]}".ToLowerInvariant();
+            state.ControllerFamily = vendorId == 1356 || identity.Contains("sony") ||
+                identity.Contains("dualsense") || identity.Contains("wireless controller") ? "PLAYSTATION" :
+                identity.Contains("xbox") || identity.Contains("microsoft") ? "XBOX" :
+                vendorId == 1406 || identity.Contains("nintendo") || identity.Contains("joy-con") ? "NINTENDO" :
+                "GENERIC";
+            state.Description = $"{state.HostFamily}: {state.ControllerFamily} / {name}";
+        }
+
         public static Vector2 ReadMovement(int playerIndex)
         {
             ControllerState state = GetPlayerState(playerIndex);
@@ -68,6 +88,18 @@ namespace FamilyForceUnity.Input
         public static bool ReadR1(int playerIndex) => ReadButton(playerIndex, 103);
         public static bool ReadStart(int playerIndex) => ReadButton(playerIndex, 108);
         public static bool ReadSelect(int playerIndex) => ReadButton(playerIndex, 109);
+
+        public static bool UsesXiaomiMapping(int playerIndex)
+        {
+            ControllerState state = GetPlayerState(playerIndex);
+            return state != null && state.HostFamily == "XIAOMI_TV" && state.ControllerFamily == "PLAYSTATION";
+        }
+
+        public static string DescribePlayer(int playerIndex)
+        {
+            ControllerState state = GetPlayerState(playerIndex);
+            return state?.Description ?? "Waiting for Android controller input";
+        }
 
         private static bool ReadButton(int playerIndex, int keyCode)
         {

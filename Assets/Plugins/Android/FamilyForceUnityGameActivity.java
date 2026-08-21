@@ -9,6 +9,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import java.util.Locale;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.UnityPlayerGameActivity;
@@ -16,6 +18,31 @@ import java.io.File;
 
 public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     private static final String RECEIVER = "Android Input Bridge";
+    private static final Set<Integer> ANNOUNCED_DEVICES = new HashSet<>();
+
+    private static String clean(String value) {
+        return value == null ? "" : value.replace('|', '/');
+    }
+
+    private static String hostFamily() {
+        String identity = (Build.MANUFACTURER + " " + Build.BRAND + " " + Build.MODEL)
+                .toLowerCase(Locale.ROOT);
+        if (identity.contains("xiaomi") || identity.contains("mitv")) return "XIAOMI_TV";
+        if (identity.contains("nvidia") || identity.contains("shield")) return "NVIDIA_SHIELD";
+        return "ANDROID";
+    }
+
+    private static void announceDevice(int deviceId) {
+        if (ANNOUNCED_DEVICES.contains(deviceId)) return;
+        InputDevice device = InputDevice.getDevice(deviceId);
+        if (device == null) return;
+        ANNOUNCED_DEVICES.add(deviceId);
+        String payload = deviceId + "|" + hostFamily() + "|" +
+                clean(Build.MANUFACTURER) + "|" + clean(Build.MODEL) + "|" +
+                clean(device.getName()) + "|" + device.getVendorId() + "|" +
+                device.getProductId() + "|" + clean(device.getDescriptor());
+        UnityPlayer.UnitySendMessage(RECEIVER, "OnNativeDevice", payload);
+    }
 
     public int installDownloadedApk(String apkPath) {
         try {
@@ -107,6 +134,7 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         if (isControllerSource(event.getSource())) {
+            announceDevice(event.getDeviceId());
             String payload = event.getDeviceId() + "|" +
                     event.getAxisValue(MotionEvent.AXIS_X) + "|" +
                     event.getAxisValue(MotionEvent.AXIS_Y) + "|" +
@@ -125,6 +153,7 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (isControllerKey(event)) {
+            announceDevice(event.getDeviceId());
             int keyCode = normalizeKeyCode(event);
             String payload = event.getDeviceId() + "|" + keyCode + "|" +
                     (event.getAction() == KeyEvent.ACTION_DOWN ? "1" : "0");

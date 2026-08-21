@@ -19,7 +19,7 @@ namespace FamilyForceUnity.Input
 
             float panelWidth = Mathf.Min(Screen.width - 24f, 940f);
             string[] legacyNames = ControllerDeviceRouter.GetLegacyControllerNames();
-            float panelHeight = 44f + Mathf.Min(InputSystem.devices.Count + legacyNames.Length + 1, 10) * 25f;
+            float panelHeight = 69f + Mathf.Min(InputSystem.devices.Count + legacyNames.Length + 1, 10) * 25f;
             GUI.color = new Color(0f, 0f, 0f, 0.72f);
             GUI.Box(new Rect(12, Screen.height - panelHeight - 12, panelWidth, panelHeight), GUIContent.none);
             GUI.color = Color.white;
@@ -27,7 +27,10 @@ namespace FamilyForceUnity.Input
             GUI.Label(new Rect(24, Screen.height - panelHeight - 4, panelWidth - 24, 30),
                 $"INPUT DIAGNOSTICS — controllers: {ControllerDeviceRouter.ControllerCount}", titleStyle);
 
-            int row = 0;
+            GUI.Label(new Rect(24, Screen.height - panelHeight + 28, panelWidth - 24, 25),
+                ControllerDeviceRouter.DescribeAutomaticProfile(0), labelStyle);
+
+            int row = 1;
             foreach (InputDevice device in InputSystem.devices)
             {
                 if (row >= 7) break;
