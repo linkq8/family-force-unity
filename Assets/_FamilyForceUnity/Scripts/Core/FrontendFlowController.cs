@@ -155,7 +155,7 @@ namespace FamilyForceUnity.Core
             GUI.Label(new Rect(left, Screen.height * 0.34f, width, 60), "UNITY", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.51f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
             GUI.Label(new Rect(left, Screen.height * 0.76f, width, 46), "PRESS CONFIRM", headingStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.87f, width, 28), "D-pad to navigate   Confirm to select   Back to return   F1 / R3 for input devices", hintStyle);
+            GUI.Label(new Rect(left, Screen.height * 0.87f, width, 28), "D-pad to navigate   Confirm to select   Back to return   F1 / R3 / Touchpad for input devices", hintStyle);
         }
 
         private void DrawCharacterSelect()

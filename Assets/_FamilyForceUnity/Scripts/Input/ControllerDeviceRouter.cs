@@ -96,22 +96,40 @@ namespace FamilyForceUnity.Input
                 UnityEngine.Input.GetAxisRaw("Horizontal"),
                 UnityEngine.Input.GetAxisRaw("Vertical"));
             Vector2 dpad = new Vector2(
-                UnityEngine.Input.GetAxisRaw("Debug Vertical"),
+                UnityEngine.Input.GetAxisRaw("FFU DPad Axis 8"),
                 -UnityEngine.Input.GetAxisRaw("Debug Horizontal"));
             return Vector2.ClampMagnitude(dpad.sqrMagnitude > stick.sqrMagnitude ? dpad : stick, 1f);
         }
 
         public static bool ReadLegacyConfirm(int playerIndex) =>
             playerIndex == 0 && LegacyControllerCount > 0 &&
-            (UnityEngine.Input.GetKey(KeyCode.JoystickButton0) || UnityEngine.Input.GetKey(KeyCode.JoystickButton9));
+            UnityEngine.Input.GetKey(KeyCode.JoystickButton0);
 
         public static bool ReadLegacyCancel(int playerIndex) =>
             playerIndex == 0 && LegacyControllerCount > 0 && UnityEngine.Input.GetKey(KeyCode.JoystickButton1);
 
         public static bool ReadLegacyDiagnostics(int playerIndex) =>
-            playerIndex == 0 && LegacyControllerCount > 0 && UnityEngine.Input.GetKey(KeyCode.JoystickButton11);
+            playerIndex == 0 && LegacyControllerCount > 0 &&
+            (UnityEngine.Input.GetKey(KeyCode.JoystickButton9) || UnityEngine.Input.GetKey(KeyCode.JoystickButton11));
 
         public static string[] GetLegacyControllerNames() => UnityEngine.Input.GetJoystickNames();
+
+        public static string DescribeLegacyState()
+        {
+            float axis6 = UnityEngine.Input.GetAxisRaw("Debug Horizontal");
+            float axis7 = UnityEngine.Input.GetAxisRaw("Debug Vertical");
+            float axis8 = UnityEngine.Input.GetAxisRaw("FFU DPad Axis 8");
+            float axis9 = UnityEngine.Input.GetAxisRaw("FFU DPad Axis 9");
+            float axis10 = UnityEngine.Input.GetAxisRaw("FFU DPad Axis 10");
+            string pressed = "none";
+            for (int i = 0; i < 20; i++)
+            {
+                var key = (KeyCode)((int)KeyCode.JoystickButton0 + i);
+                if (!UnityEngine.Input.GetKey(key)) continue;
+                pressed = pressed == "none" ? i.ToString() : $"{pressed},{i}";
+            }
+            return $"RAW axes 6:{axis6:0.00} 7:{axis7:0.00} 8:{axis8:0.00} 9:{axis9:0.00} 10:{axis10:0.00} | buttons:{pressed}";
+        }
 
         public static string Describe(InputDevice device)
         {
