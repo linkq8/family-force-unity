@@ -1,9 +1,6 @@
 package com.familyforceunity.input;
 
 import android.content.Intent;
-import android.app.DownloadManager;
-import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -18,50 +15,97 @@ import java.util.Set;
 import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.UnityPlayerGameActivity;
 import java.io.File;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
     private static final String RECEIVER = "Android Input Bridge";
     private static final Set<Integer> ANNOUNCED_DEVICES = new HashSet<>();
     private long activeDownloadId = -1L;
+    private volatile String downloadState = "IDLE";
+    private volatile long downloadBytes = 0L;
+    private volatile long downloadTotal = 0L;
+    private volatile int downloadReason = 0;
 
     public long beginApkDownload(String url) {
-        try {
-            DownloadManager manager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
-            File destination = new File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS),
-                    "FamilyForceUnity-update.apk");
-            if (destination.exists()) destination.delete();
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-            request.setTitle("Family Force Unity update");
-            request.setDescription("Downloading the latest game version");
-            request.setMimeType("application/vnd.android.package-archive");
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-            request.setDestinationUri(Uri.fromFile(destination));
-            request.setAllowedOverMetered(true);
-            request.setAllowedOverRoaming(false);
-            activeDownloadId = manager.enqueue(request);
-            return activeDownloadId;
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            return -1L;
-        }
+        if ("RUNNING".equals(downloadState)) return activeDownloadId;
+        activeDownloadId = System.currentTimeMillis();
+        downloadState = "RUNNING";
+        downloadBytes = 0L;
+        downloadTotal = 0L;
+        downloadReason = 0;
+        final long requestId = activeDownloadId;
+        new Thread(() -> downloadDirect(url, requestId), "FFU-Fast-Downloader").start();
+        return requestId;
     }
 
     public String getApkDownloadStatus(long downloadId) {
-        DownloadManager manager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
-        Cursor cursor = manager.query(new DownloadManager.Query().setFilterById(downloadId));
-        if (cursor == null) return "FAILED|0|0|0";
+        if (downloadId != activeDownloadId) return "FAILED|0|0|-2";
+        return downloadState + "|" + downloadBytes + "|" + downloadTotal + "|" + downloadReason;
+    }
+
+    private void downloadDirect(String sourceUrl, long requestId) {
+        File destination = new File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "FamilyForceUnity-update.apk");
+        File partial = new File(destination.getParentFile(), destination.getName() + ".part");
         try {
-            if (!cursor.moveToFirst()) return "FAILED|0|0|0";
-            int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-            long downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-            long total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-            int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
-            String label = status == DownloadManager.STATUS_SUCCESSFUL ? "SUCCESS" :
-                    status == DownloadManager.STATUS_FAILED ? "FAILED" :
-                    status == DownloadManager.STATUS_PAUSED ? "PAUSED" : "RUNNING";
-            return label + "|" + downloaded + "|" + total + "|" + reason;
-        } finally {
-            cursor.close();
+            if (partial.exists()) partial.delete();
+            URL currentUrl = new URL(sourceUrl);
+            HttpURLConnection connection = null;
+            for (int redirect = 0; redirect < 6; redirect++) {
+                connection = (HttpURLConnection)currentUrl.openConnection();
+                connection.setInstanceFollowRedirects(false);
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(30000);
+                connection.setRequestProperty("User-Agent", "Family-Force-Unity-Updater/0.10.1");
+                connection.setRequestProperty("Accept", "application/octet-stream");
+                connection.setRequestProperty("Accept-Encoding", "identity");
+                int response = connection.getResponseCode();
+                if (response >= 300 && response < 400) {
+                    String location = connection.getHeaderField("Location");
+                    connection.disconnect();
+                    if (location == null) throw new java.io.IOException("Redirect without location");
+                    currentUrl = new URL(currentUrl, location);
+                    continue;
+                }
+                if (response < 200 || response >= 300)
+                    throw new java.io.IOException("HTTP " + response);
+                break;
+            }
+            if (connection == null) throw new java.io.IOException("No connection");
+            downloadTotal = connection.getContentLengthLong();
+            byte[] buffer = new byte[256 * 1024];
+            try (BufferedInputStream input = new BufferedInputStream(connection.getInputStream(), buffer.length);
+                 BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(partial), buffer.length)) {
+                int count;
+                while ((count = input.read(buffer)) >= 0) {
+                    if (requestId != activeDownloadId) throw new java.io.IOException("Download replaced");
+                    output.write(buffer, 0, count);
+                    downloadBytes += count;
+                }
+                output.flush();
+            } finally {
+                connection.disconnect();
+            }
+            if (destination.exists()) destination.delete();
+            if (!partial.renameTo(destination)) {
+                try (FileInputStream input = new FileInputStream(partial);
+                     FileOutputStream output = new FileOutputStream(destination)) {
+                    byte[] copyBuffer = new byte[256 * 1024];
+                    int count;
+                    while ((count = input.read(copyBuffer)) >= 0) output.write(copyBuffer, 0, count);
+                }
+                partial.delete();
+            }
+            downloadState = "SUCCESS";
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            downloadReason = exception.getClass().getSimpleName().hashCode();
+            downloadState = "FAILED";
         }
     }
 

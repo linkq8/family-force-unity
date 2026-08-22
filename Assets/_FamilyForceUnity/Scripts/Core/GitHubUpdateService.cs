@@ -75,7 +75,7 @@ namespace FamilyForceUnity.Core
         private IEnumerator DownloadAndInstall()
         {
             IsBusy = true;
-            Status = "STARTING ANDROID DOWNLOAD...";
+            Status = "STARTING FAST DOWNLOAD...";
 #if UNITY_ANDROID && !UNITY_EDITOR
             using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             using AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
@@ -112,7 +112,7 @@ namespace FamilyForceUnity.Core
                 yield return new WaitForSecondsRealtime(0.35f);
             }
 
-            downloadedApkPath = "android-download-manager";
+            downloadedApkPath = "android-native-fast-download";
             downloadReady = true;
             LaunchInstaller(downloadedApkPath);
             IsBusy = false;
