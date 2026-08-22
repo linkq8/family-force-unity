@@ -76,7 +76,10 @@ def keep_largest_component(image: Image.Image, focus_box=None) -> Image.Image:
         center_y = (box[1] + box[3]) * 0.5
         centered = focus_box is None or (focus_box[0] <= center_x < focus_box[2] and focus_box[1] <= center_y < focus_box[3])
         nearby = horizontal_gap <= 12 and vertical_gap <= 12
-        if component is largest or (centered and len(component) >= 3 and (focus_box is not None or nearby)):
+        # A separated head, hand, or shoe is still a substantial component. Tiny components are
+        # chroma/black-key debris (usually visible as dots beneath the feet) and must not survive.
+        meaningful_detail = len(component) >= 48
+        if component is largest or (centered and meaningful_detail and (focus_box is not None or nearby)):
             for index in component:
                 keep[index] = 255
     cleaned = image.copy()
