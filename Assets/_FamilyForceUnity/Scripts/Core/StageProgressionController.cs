@@ -13,14 +13,18 @@ namespace FamilyForceUnity.Core
         private Camera stageCamera;
         private GameObject gate;
         private float startedAt;
+        private float activateNextAt = -1f;
+        private bool waitingForNextWave;
+        private float announcementUntil;
         public bool IsComplete { get; private set; }
         public int CurrentWave => Mathf.Min(waveIndex + 1, waves.Count);
         public int WaveCount => waves.Count;
         public float ElapsedSeconds => Time.time - startedAt;
+        public bool IsWaveIncoming => waitingForNextWave;
 
         public void Configure(Camera camera, GameObject stageGate, params List<GameObject>[] configuredWaves)
         {
-            waves.Clear(); waves.AddRange(configuredWaves); waveIndex = 0; IsComplete = false; stageCamera = camera; gate = stageGate; startedAt = Time.time;
+            waves.Clear(); waves.AddRange(configuredWaves); waveIndex = 0; IsComplete = false; stageCamera = camera; gate = stageGate; startedAt = Time.time; announcementUntil = Time.time + 2.5f;
             for (int i = 0; i < waves.Count; i++)
                 foreach (GameObject enemy in waves[i]) enemy.SetActive(i == 0);
         }
@@ -28,7 +32,8 @@ namespace FamilyForceUnity.Core
         private void LateUpdate()
         {
             PrototypeFighterController[] players = FindObjectsByType<PrototypeFighterController>(FindObjectsSortMode.None);
-            float stageMaximum = waveIndex == 0 ? 2.65f : 8.5f;
+            int movementWave = waitingForNextWave ? Mathf.Max(0, waveIndex - 1) : waveIndex;
+            float stageMaximum = movementWave == 0 ? 1.65f : movementWave == 1 ? 8.15f : 14.5f;
             for (int i = 0; i < players.Length; i++)
             {
                 float minimum = -8.5f;
@@ -46,14 +51,38 @@ namespace FamilyForceUnity.Core
                 float average = 0f;
                 foreach (var player in players) average += player.transform.position.x;
                 average /= players.Length;
-                Vector3 target = new(Mathf.Clamp(average + 1.25f, -3.6f, 3.6f), 0f, -10f);
+                Vector3 target = new(Mathf.Clamp(average + 1.25f, -7.5f, 9.5f), 0f, -10f);
                 stageCamera.transform.position = Vector3.Lerp(stageCamera.transform.position, target, 0.07f);
+            }
+            if (waitingForNextWave)
+            {
+                if (Time.time < activateNextAt) return;
+                waitingForNextWave = false;
+                announcementUntil = Time.time + (waveIndex == waves.Count - 1 ? 3.5f : 2.2f);
+                if (gate != null)
+                {
+                    if (waveIndex == 1) { gate.transform.position = new Vector3(8.35f, -0.2f, -0.2f); gate.SetActive(true); }
+                    else gate.SetActive(false);
+                }
+                foreach (GameObject enemy in waves[waveIndex]) enemy.SetActive(true);
+                return;
             }
             if (IsComplete || waves.Count == 0 || !WaveDefeated(waves[waveIndex])) return;
             waveIndex++;
             if (waveIndex >= waves.Count) { IsComplete = true; return; }
             if (gate != null) gate.SetActive(false);
-            foreach (GameObject enemy in waves[waveIndex]) enemy.SetActive(true);
+            waitingForNextWave = true;
+            activateNextAt = Time.time + 2.5f;
+        }
+
+        private void OnGUI()
+        {
+            if (IsComplete || Time.time > announcementUntil) return;
+            GUIStyle style = new(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 32, fontStyle = FontStyle.Bold,
+                normal = { textColor = waveIndex == waves.Count - 1 ? new Color(1f, 0.28f, 0.16f) : new Color(1f, 0.75f, 0.14f) } };
+            string text = waveIndex == waves.Count - 1 ? GameLocalization.T("BOSS — KHALID, NEON CAPTAIN", "الزعيم — خالد، قائد النيون") :
+                GameLocalization.T($"WAVE {waveIndex + 1}", $"الموجة {waveIndex + 1}");
+            GUI.Label(new Rect(0, Screen.height * 0.25f, Screen.width, 64), text, style);
         }
 
         private static bool WaveDefeated(List<GameObject> wave)

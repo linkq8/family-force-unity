@@ -5,7 +5,7 @@ namespace FamilyForceUnity.Characters
     public sealed class LaneMotor : MonoBehaviour
     {
         [SerializeField] private float speed = 3.5f;
-        [SerializeField] private Vector2 horizontalBounds = new(-8.5f, 8.5f);
+        [SerializeField] private Vector2 horizontalBounds = new(-12f, 15f);
         [SerializeField] private Vector2 depthBounds = new(-2.1f, 1.6f);
 
         public Vector2 GroundPosition { get; private set; }

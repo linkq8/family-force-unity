@@ -85,28 +85,40 @@ namespace FamilyForceUnity.Core
             matchRoot = new GameObject("Active Combat Stage");
 
             BuildArena();
-            CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-3f, -0.5f), playerOne, playerOneLink, 0);
+            CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-6.5f, -0.5f), playerOne, playerOneLink, 0);
             if (hasPlayerTwo && playerTwo != null)
-                CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, playerTwoLink, 1);
+                CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-5.7f, -1.2f), playerTwo, playerTwoLink, 1);
 
-            GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(1.8f, -0.3f));
-            rami.GetComponent<FighterStateMachine>().ConfigureHealth(75);
+            GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(-1.2f, -0.3f));
+            rami.GetComponent<FighterStateMachine>().ConfigureHealth(220);
             rami.GetComponent<PrototypeEnemy>().Configure(3.0f, 7, 78);
-            GameObject enemyB = CreateEnemy("Neon Guard", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f), 70, 3.4f, 6);
-            GameObject enemyC = CreateEnemy("Dock Bruiser", new Vector2(7.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f), 110, 2.55f, 11);
-            GameObject boss = CreateStreetGuard("Khalid — Neon Captain", new Vector2(7.6f, -0.15f));
-            boss.GetComponent<FighterStateMachine>().ConfigureHealth(240);
+            GameObject alleyA = CreateEnemy("Alley Runner A", new Vector2(-0.2f, 0.8f), new Color(0.2f, 0.55f, 0.78f), 200, 3.65f, 6);
+            GameObject alleyB = CreateEnemy("Alley Runner B", new Vector2(0.7f, -1.25f), new Color(0.22f, 0.48f, 0.72f), 200, 3.65f, 6);
+
+            GameObject neonA = CreateEnemy("Neon Guard A", new Vector2(4.6f, 0.9f), new Color(0.66f, 0.15f, 0.73f), 260, 3.4f, 8);
+            GameObject neonB = CreateEnemy("Neon Guard B", new Vector2(5.6f, -1.2f), new Color(0.58f, 0.12f, 0.68f), 260, 3.4f, 8);
+            GameObject bruiserA = CreateEnemy("Dock Bruiser A", new Vector2(6.8f, 0.1f), new Color(0.75f, 0.28f, 0.12f), 340, 2.55f, 12);
+            GameObject bruiserB = CreateEnemy("Dock Bruiser B", new Vector2(7.5f, -0.9f), new Color(0.68f, 0.22f, 0.1f), 340, 2.55f, 12);
+
+            GameObject eliteA = CreateEnemy("Captain Elite A", new Vector2(10.7f, 0.9f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 10);
+            GameObject eliteB = CreateEnemy("Captain Elite B", new Vector2(11.5f, -1.2f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 10);
+            GameObject boss = CreateStreetGuard("BOSS — Khalid, Neon Captain", new Vector2(12.8f, -0.15f));
+            boss.GetComponent<FighterStateMachine>().ConfigureHealth(1400);
             boss.GetComponent<PrototypeEnemy>().Configure(3.15f, 14, 58);
             boss.AddComponent<BossPhaseController>();
-            boss.transform.localScale *= 1.22f;
-            boss.GetComponent<SpriteRenderer>().color = new Color(0.42f, 0.08f, 0.12f);
-            CreateCrate(new Vector2(0.2f, -1.25f), PickupKind.Food);
-            CreateCrate(new Vector2(4.2f, -0.9f), PickupKind.Bat);
-            CreateCrate(new Vector2(6.8f, 0.9f), PickupKind.Pipe);
-            GameObject gate = CreateBlock("Wave Gate", new Vector2(3.05f, -0.2f), new Vector2(0.12f, 3.9f), new Color(0.96f, 0.25f, 0.16f, 0.78f), 20);
+            boss.transform.localScale *= 1.55f;
+            boss.GetComponent<SpriteRenderer>().color = new Color(0.68f, 0.03f, 0.08f);
+            GameObject crown = CreateBlock("Neon Captain Crown", Vector2.zero, new Vector2(0.72f, 0.18f), new Color(1f, 0.78f, 0.08f), 25);
+            AttachPart(crown, boss.transform, new Vector2(0f, 1.08f));
+
+            CreateCrate(new Vector2(-3.2f, -1.25f), PickupKind.Food);
+            CreateCrate(new Vector2(2.8f, -0.9f), PickupKind.Bat);
+            CreateCrate(new Vector2(8.7f, 0.9f), PickupKind.Pipe);
+            CreateCrate(new Vector2(10.0f, -1.1f), PickupKind.Food);
+            GameObject gate = CreateBlock("Wave Gate", new Vector2(1.85f, -0.2f), new Vector2(0.12f, 3.9f), new Color(0.96f, 0.25f, 0.16f, 0.78f), 20);
             var progression = matchRoot.AddComponent<StageProgressionController>();
-            progression.Configure(Camera.main, gate, new List<GameObject> { rami },
-                new List<GameObject> { enemyB, enemyC }, new List<GameObject> { boss });
+            progression.Configure(Camera.main, gate, new List<GameObject> { rami, alleyA, alleyB },
+                new List<GameObject> { neonA, neonB, bruiserA, bruiserB }, new List<GameObject> { eliteA, eliteB, boss });
             return true;
         }
 
@@ -166,13 +178,13 @@ namespace FamilyForceUnity.Core
 
         private void BuildArena()
         {
-            CreateBlock("Sky", new Vector2(0f, 1.6f), new Vector2(18f, 2.5f), new Color(0.05f, 0.09f, 0.18f), -20);
-            CreateBlock("City", new Vector2(0f, 0.55f), new Vector2(18f, 1.3f), new Color(0.12f, 0.18f, 0.29f), -15);
-            CreateBlock("Street", new Vector2(0f, -1.25f), new Vector2(18f, 2.6f), new Color(0.16f, 0.17f, 0.2f), -10);
-            CreateBlock("Lane Stripe", new Vector2(0f, -1.45f), new Vector2(18f, 0.06f), new Color(0.95f, 0.67f, 0.16f), -9);
+            CreateBlock("Sky", new Vector2(3f, 1.6f), new Vector2(30f, 2.5f), new Color(0.05f, 0.09f, 0.18f), -20);
+            CreateBlock("City", new Vector2(3f, 0.55f), new Vector2(30f, 1.3f), new Color(0.12f, 0.18f, 0.29f), -15);
+            CreateBlock("Street", new Vector2(3f, -1.25f), new Vector2(30f, 2.6f), new Color(0.16f, 0.17f, 0.2f), -10);
+            CreateBlock("Lane Stripe", new Vector2(3f, -1.45f), new Vector2(30f, 0.06f), new Color(0.95f, 0.67f, 0.16f), -9);
             CreateBlock("Shop Sign", new Vector2(-4.7f, 1.1f), new Vector2(2.2f, 0.42f), new Color(0.88f, 0.18f, 0.58f), -12);
             CreateBlock("Arcade Sign", new Vector2(3.8f, 1.05f), new Vector2(2.5f, 0.48f), new Color(0.12f, 0.78f, 0.9f), -12);
-            for (int i = -7; i <= 7; i += 2)
+            for (int i = -11; i <= 17; i += 2)
                 CreateBlock($"Window {i}", new Vector2(i, 0.72f), new Vector2(0.72f, 0.55f), new Color(0.13f, 0.3f, 0.5f), -13);
         }
 

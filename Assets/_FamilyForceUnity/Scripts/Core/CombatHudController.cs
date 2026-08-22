@@ -54,9 +54,18 @@ namespace FamilyForceUnity.Core
             PrototypeEnemy[] enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
             for (int i = 0; i < enemies.Length; i++)
             {
+                if (enemies[i].GetComponent<BossPhaseController>() != null) continue;
                 FighterStateMachine fighter = enemies[i].GetComponent<FighterStateMachine>();
                 DrawHealth(new Rect(Screen.width - 324, 22 + i * 38, 300, 20), enemies[i].name,
                     fighter.Health, fighter.MaxHealth, new Color(0.9f, 0.22f, 0.2f));
+            }
+            BossPhaseController boss = FindFirstObjectByType<BossPhaseController>();
+            if (boss != null)
+            {
+                FighterStateMachine bossFighter = boss.GetComponent<FighterStateMachine>();
+                DrawHealth(new Rect(Screen.width * 0.25f, Screen.height - 42f, Screen.width * 0.5f, 24f),
+                    GameLocalization.T("BOSS — KHALID", "الزعيم — خالد"), bossFighter.Health, bossFighter.MaxHealth,
+                    new Color(0.95f, 0.12f, 0.08f));
             }
 
             StageProgressionController stage = FindFirstObjectByType<StageProgressionController>();
