@@ -19,6 +19,9 @@ namespace FamilyForceUnity.Input
         private MoveDefinition activeInputMove;
         private bool hitApplied;
         public float FacingSign { get; private set; } = 1f;
+        public int WeaponBonus { get; private set; }
+
+        public void EquipTemporaryWeapon(int damageBonus) => WeaponBonus = Mathf.Max(WeaponBonus, damageBonus);
 
         private void Awake()
         {
@@ -119,8 +122,16 @@ namespace FamilyForceUnity.Input
                 float forwardDistance = delta.x * FacingSign;
                 if (forwardDistance < -0.15f || forwardDistance > reach || Mathf.Abs(delta.y) > 0.8f) continue;
                 var target = enemy.GetComponent<FighterStateMachine>();
-                target.ApplyHit(move.Damage, move.HitPauseTicks, move.Id is MoveId.HeavyPunch or MoveId.Special);
+                target.ApplyHit(move.Damage + WeaponBonus, move.HitPauseTicks, move.Id is MoveId.HeavyPunch or MoveId.Special);
                 enemy.GetComponent<LaneMotor>().ApplyKnockback(new Vector2(move.Knockback.x * 0.22f * FacingSign, move.Knockback.y * 0.12f));
+            }
+
+            foreach (var prop in FindObjectsByType<FamilyForceUnity.World.BreakableProp>(FindObjectsSortMode.None))
+            {
+                Vector2 delta = prop.transform.position - transform.position;
+                float forwardDistance = delta.x * FacingSign;
+                if (forwardDistance < -0.15f || forwardDistance > reach || Mathf.Abs(delta.y) > 0.85f) continue;
+                prop.ApplyHit(move.Damage + WeaponBonus);
             }
         }
     }

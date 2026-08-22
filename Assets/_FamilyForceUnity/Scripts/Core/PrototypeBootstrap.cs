@@ -4,6 +4,7 @@ using FamilyForceUnity.Characters;
 using FamilyForceUnity.Combat;
 using FamilyForceUnity.Content;
 using FamilyForceUnity.Input;
+using FamilyForceUnity.World;
 using UnityEngine;
 
 namespace FamilyForceUnity.Core
@@ -88,9 +89,14 @@ namespace FamilyForceUnity.Core
             if (hasPlayerTwo && playerTwo != null)
                 CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, 1);
 
-            CreateStreetGuard("Rami — Street Guard", new Vector2(3.6f, -0.3f));
-            CreateEnemy("Enemy B", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
-            CreateEnemy("Enemy C", new Vector2(6.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
+            GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(1.8f, -0.3f));
+            GameObject enemyB = CreateEnemy("Neon Guard", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
+            GameObject enemyC = CreateEnemy("Dock Bruiser", new Vector2(7.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
+            CreateCrate(new Vector2(0.2f, -1.25f), PickupKind.Food);
+            CreateCrate(new Vector2(4.2f, -0.9f), PickupKind.Bat);
+            GameObject gate = CreateBlock("Wave Gate", new Vector2(3.05f, -0.2f), new Vector2(0.12f, 3.9f), new Color(0.96f, 0.25f, 0.16f, 0.78f), 20);
+            var progression = matchRoot.AddComponent<StageProgressionController>();
+            progression.Configure(Camera.main, gate, new List<GameObject> { rami }, new List<GameObject> { enemyB, enemyC });
             return true;
         }
 
@@ -140,6 +146,10 @@ namespace FamilyForceUnity.Core
             CreateBlock("City", new Vector2(0f, 0.55f), new Vector2(18f, 1.3f), new Color(0.12f, 0.18f, 0.29f), -15);
             CreateBlock("Street", new Vector2(0f, -1.25f), new Vector2(18f, 2.6f), new Color(0.16f, 0.17f, 0.2f), -10);
             CreateBlock("Lane Stripe", new Vector2(0f, -1.45f), new Vector2(18f, 0.06f), new Color(0.95f, 0.67f, 0.16f), -9);
+            CreateBlock("Shop Sign", new Vector2(-4.7f, 1.1f), new Vector2(2.2f, 0.42f), new Color(0.88f, 0.18f, 0.58f), -12);
+            CreateBlock("Arcade Sign", new Vector2(3.8f, 1.05f), new Vector2(2.5f, 0.48f), new Color(0.12f, 0.78f, 0.9f), -12);
+            for (int i = -7; i <= 7; i += 2)
+                CreateBlock($"Window {i}", new Vector2(i, 0.72f), new Vector2(0.72f, 0.55f), new Color(0.13f, 0.3f, 0.5f), -13);
         }
 
         private void CreateFighter(string label, Vector2 position, CharacterDefinition character, int playerIndex)
@@ -189,15 +199,16 @@ namespace FamilyForceUnity.Core
             return punch;
         }
 
-        private void CreateEnemy(string label, Vector2 position, Color color)
+        private GameObject CreateEnemy(string label, Vector2 position, Color color)
         {
             var enemy = CreateBlock(label, position, new Vector2(0.62f, 1.2f), color, 8);
             enemy.AddComponent<LaneMotor>();
             enemy.AddComponent<FighterStateMachine>();
             enemy.AddComponent<PrototypeEnemy>();
+            return enemy;
         }
 
-        private void CreateStreetGuard(string label, Vector2 position)
+        private GameObject CreateStreetGuard(string label, Vector2 position)
         {
             var enemy = CreateBlock(label, position, new Vector2(0.68f, 0.78f), new Color(0.12f, 0.18f, 0.27f), 8);
             enemy.AddComponent<LaneMotor>();
@@ -217,6 +228,23 @@ namespace FamilyForceUnity.Core
             var visual = enemy.AddComponent<PrototypeEnemyVisual>();
             visual.Configure(attackArm.transform);
             enemy.AddComponent<PrototypeEnemy>();
+            return enemy;
+        }
+
+        private void CreateCrate(Vector2 position, PickupKind drop)
+        {
+            GameObject crate = CreateBlock("Breakable Supply Crate", position, new Vector2(0.72f, 0.72f), new Color(0.55f, 0.3f, 0.12f), 6);
+            GameObject stripe = CreateBlock("Crate Stripe", Vector2.zero, new Vector2(0.12f, 0.76f), new Color(0.9f, 0.62f, 0.18f), 7);
+            AttachPart(stripe, crate.transform, Vector2.zero);
+            crate.AddComponent<BreakableProp>().Configure(point => CreatePickup(point, drop));
+        }
+
+        private void CreatePickup(Vector3 position, PickupKind kind)
+        {
+            Vector2 size = kind == PickupKind.Food ? new Vector2(0.42f, 0.32f) : new Vector2(0.16f, 1.05f);
+            Color color = kind == PickupKind.Food ? new Color(0.25f, 0.9f, 0.35f) : new Color(0.72f, 0.5f, 0.22f);
+            GameObject pickup = CreateBlock(kind == PickupKind.Food ? "Health Snack +28" : "Wooden Bat +8", position, size, color, 14);
+            pickup.AddComponent<StagePickup>().Configure(kind);
         }
 
         private GameObject CreateAndAttachPart(string label, Transform parent, Vector2 localPosition,

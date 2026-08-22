@@ -80,6 +80,11 @@ namespace FamilyForceUnity.Characters
             CombatFeedback.PlayHit(knockdown || damage >= 20);
         }
 
+        public void Heal(int amount)
+        {
+            if (health > 0) health = Mathf.Min(MaxHealth, health + Mathf.Max(0, amount));
+        }
+
         public void SetWalking(bool walking)
         {
             if (state is FighterState.Idle or FighterState.Walk)

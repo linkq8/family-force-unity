@@ -46,6 +46,10 @@ namespace FamilyForceUnity.Core
                     fighter.Health, fighter.MaxHealth, new Color(0.9f, 0.22f, 0.2f));
             }
 
+            StageProgressionController stage = FindFirstObjectByType<StageProgressionController>();
+            if (stage != null && !stage.IsComplete)
+                GUI.Label(new Rect(Screen.width * 0.38f, 18, Screen.width * 0.24f, 32), $"WAVE {stage.CurrentWave} / {stage.WaveCount}", banner);
+
             bool victory = AllEnemiesDefeated();
             bool defeat = AllPlayersDefeated();
             if (!victory && !defeat) return;
@@ -63,6 +67,8 @@ namespace FamilyForceUnity.Core
 
         private static bool AllEnemiesDefeated()
         {
+            StageProgressionController stage = FindFirstObjectByType<StageProgressionController>();
+            if (stage != null) return stage.IsComplete;
             PrototypeEnemy[] enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
             if (enemies.Length == 0) return false;
             foreach (PrototypeEnemy enemy in enemies)

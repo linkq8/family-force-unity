@@ -39,5 +39,11 @@ namespace FamilyForceUnity.Characters
                 Mathf.Clamp(GroundPosition.y, depthBounds.x, depthBounds.y));
             transform.position = new Vector3(GroundPosition.x, GroundPosition.y + VisualHeight, GroundPosition.y);
         }
+
+        public void SetHorizontalBounds(float minimum, float maximum)
+        {
+            horizontalBounds = new Vector2(Mathf.Min(minimum, maximum), Mathf.Max(minimum, maximum));
+            GroundPosition = new Vector2(Mathf.Clamp(GroundPosition.x, horizontalBounds.x, horizontalBounds.y), GroundPosition.y);
+        }
     }
 }
