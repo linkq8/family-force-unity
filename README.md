@@ -9,6 +9,7 @@ Independent Unity 6 project for a retro-modern 2D beat-'em-up targeting Android 
 - Combat simulation: fixed `60 Hz`
 - Input: Unity Input System with local player device pairing
 - Rendering: URP 2D / pixel-perfect presentation
+- Character production: follow [Character Art Guidelines](Docs/CHARACTER_ART_GUIDELINES.md) and [Content Safety Policy](Docs/CONTENT_SAFETY_POLICY.md)
 - Distribution phase 1: directly installable APK
 
 ## Safety boundary
