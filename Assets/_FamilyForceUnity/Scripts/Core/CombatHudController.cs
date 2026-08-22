@@ -12,6 +12,8 @@ namespace FamilyForceUnity.Core
         private bool confirmHeld;
         private GUIStyle label;
         private GUIStyle banner;
+        private GUIStyle enemyLabel;
+        private GUIStyle controlsHint;
         private bool joinHeld;
 
         public void Configure(PrototypeBootstrap owner) => bootstrap = owner;
@@ -34,6 +36,9 @@ namespace FamilyForceUnity.Core
             if (bootstrap == null || !bootstrap.MatchStarted) return;
             label ??= new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, normal = { textColor = Color.white } };
             banner ??= new GUIStyle(label) { fontSize = 34, alignment = TextAnchor.MiddleCenter };
+            enemyLabel ??= new GUIStyle(label) { fontSize = 12, alignment = TextAnchor.MiddleRight };
+            controlsHint ??= new GUIStyle(label) { fontSize = 12, alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.8f, 0.86f, 0.96f) } };
 
             PrototypeFighterController[] players = FindObjectsByType<PrototypeFighterController>(FindObjectsSortMode.None);
             for (int i = 0; i < players.Length; i++)
@@ -44,7 +49,8 @@ namespace FamilyForceUnity.Core
                 LinkCompanionAssist link = players[i].GetComponent<LinkCompanionAssist>();
                 string linkStatus = link != null && link.CooldownRemaining > 0f ? $"LINK {link.CooldownRemaining:0.0}s" : "LINK READY";
                 string weapon = players[i].WeaponBonus > 0 ? $"  WEAPON +{players[i].WeaponBonus}" : "";
-                GUI.Label(new Rect(330, 22 + i * 46, 260, 24), linkStatus + weapon, label);
+                string action = Time.time < players[i].ActionLabelUntil ? $"  {players[i].LastActionLabel}" : "";
+                GUI.Label(new Rect(330, 22 + i * 46, 360, 24), linkStatus + weapon + action, label);
             }
             bool hasP2 = false;
             foreach (var player in players) if (player.PlayerIndex == 1) hasP2 = true;
@@ -52,12 +58,15 @@ namespace FamilyForceUnity.Core
                 GUI.Label(new Rect(Screen.width * 0.3f, Screen.height - 50, Screen.width * 0.4f, 34), GameLocalization.T("P2 — PRESS X TO JOIN", "اللاعب 2 — اضغط X للانضمام"), banner);
 
             PrototypeEnemy[] enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
+            int enemyRow = 0;
             for (int i = 0; i < enemies.Length; i++)
             {
                 if (enemies[i].GetComponent<BossPhaseController>() != null) continue;
                 FighterStateMachine fighter = enemies[i].GetComponent<FighterStateMachine>();
-                DrawHealth(new Rect(Screen.width - 324, 22 + i * 38, 300, 20), enemies[i].name,
-                    fighter.Health, fighter.MaxHealth, new Color(0.9f, 0.22f, 0.2f));
+                Rect enemyRect = new(Screen.width - 254, 28 + enemyRow * 34, 230, 14);
+                GUI.Label(new Rect(enemyRect.x, enemyRect.y - 15, enemyRect.width, 16), $"{ShortEnemyName(enemies[i].name)}  {fighter.Health}", enemyLabel);
+                DrawBar(enemyRect, fighter.Health, fighter.MaxHealth, new Color(0.9f, 0.22f, 0.2f));
+                enemyRow++;
             }
             BossPhaseController boss = FindFirstObjectByType<BossPhaseController>();
             if (boss != null)
@@ -67,10 +76,12 @@ namespace FamilyForceUnity.Core
                     GameLocalization.T("BOSS — KHALID", "الزعيم — خالد"), bossFighter.Health, bossFighter.MaxHealth,
                     new Color(0.95f, 0.12f, 0.08f));
             }
+            GUI.Label(new Rect(Screen.width * 0.12f, Screen.height - 76f, Screen.width * 0.76f, 22f),
+                "SQUARE Punch   TRIANGLE Kick   CIRCLE Heavy   X Jump   R1 Special   L1/L2/R2 Link   START Pause", controlsHint);
 
             StageProgressionController stage = FindFirstObjectByType<StageProgressionController>();
             if (stage != null && !stage.IsComplete)
-                GUI.Label(new Rect(Screen.width * 0.38f, 18, Screen.width * 0.24f, 32), GameLocalization.T($"WAVE {stage.CurrentWave} / {stage.WaveCount}", $"الموجة {stage.CurrentWave} / {stage.WaveCount}"), banner);
+                GUI.Label(new Rect(Screen.width * 0.38f, 105, Screen.width * 0.24f, 32), GameLocalization.T($"WAVE {stage.CurrentWave} / {stage.WaveCount}", $"الموجة {stage.CurrentWave} / {stage.WaveCount}"), banner);
 
             bool victory = AllEnemiesDefeated();
             bool defeat = AllPlayersDefeated();
@@ -84,8 +95,22 @@ namespace FamilyForceUnity.Core
         private void DrawHealth(Rect rect, string title, int health, int maximum, Color color)
         {
             GUI.Label(new Rect(rect.x, rect.y - 19, rect.width, 20), $"{title}  {health}", label);
+            DrawBar(rect, health, maximum, color);
+        }
+
+        private static void DrawBar(Rect rect, int health, int maximum, Color color)
+        {
             DrawSolid(rect, new Color(0.08f, 0.09f, 0.12f, 0.95f));
             DrawSolid(new Rect(rect.x + 2, rect.y + 2, (rect.width - 4) * Mathf.Clamp01(health / (float)maximum), rect.height - 4), color);
+        }
+
+        private static string ShortEnemyName(string value)
+        {
+            if (value.StartsWith("Alley")) return "RUNNER";
+            if (value.StartsWith("Neon")) return "NEON GUARD";
+            if (value.StartsWith("Dock")) return "BRUISER";
+            if (value.StartsWith("Captain")) return "ELITE";
+            return value.Replace(" — Street Guard", "");
         }
 
         private static bool AllEnemiesDefeated()

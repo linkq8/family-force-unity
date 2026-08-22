@@ -33,27 +33,39 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerConfirm(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 304);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadEast(playerIndex)
                     : AndroidNativeInputBridge.ReadSouth(playerIndex);
+            }
             return ReadConfirm(GetController(playerIndex)) || ReadLegacyConfirm(playerIndex);
         }
 
         public static bool ReadPlayerCancel(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 305);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadNorth(playerIndex)
                     : AndroidNativeInputBridge.ReadEast(playerIndex);
+            }
             return ReadCancel(GetController(playerIndex)) || ReadLegacyCancel(playerIndex);
         }
 
         public static bool ReadPlayerLightAttack(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 307);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadSouth(playerIndex)
                     : AndroidNativeInputBridge.ReadNorth(playerIndex);
+            }
 
             InputDevice device = GetController(playerIndex);
             if (device is Gamepad gamepad)
@@ -64,34 +76,48 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerKick(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 308);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadNorth(playerIndex)
                     : AndroidNativeInputBridge.ReadWest(playerIndex);
+            }
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonEast.isPressed;
         }
 
         public static bool ReadPlayerHeavyAttack(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 305);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadWest(playerIndex)
                     : AndroidNativeInputBridge.ReadEast(playerIndex);
+            }
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonNorth.isPressed;
         }
 
         public static bool ReadPlayerJump(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
+            {
+                if (AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex))
+                    return AndroidNativeInputBridge.ReadScan(playerIndex, 304);
                 return AndroidNativeInputBridge.UsesXiaomiMapping(playerIndex)
                     ? AndroidNativeInputBridge.ReadEast(playerIndex)
                     : AndroidNativeInputBridge.ReadSouth(playerIndex);
+            }
             return GetController(playerIndex) is Gamepad gamepad && gamepad.buttonSouth.isPressed;
         }
 
         public static bool ReadPlayerSpecial(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadR1(playerIndex) || AndroidNativeInputBridge.ReadL1(playerIndex);
+                return AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadScan(playerIndex, 311)
+                    : AndroidNativeInputBridge.ReadR1(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad &&
                 (gamepad.rightShoulder.isPressed || gamepad.leftShoulder.isPressed);
         }
@@ -99,7 +125,9 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerLink(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadR2(playerIndex) || AndroidNativeInputBridge.ReadL2(playerIndex);
+                return AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadScan(playerIndex, 310) || AndroidNativeInputBridge.ReadScan(playerIndex, 312) || AndroidNativeInputBridge.ReadScan(playerIndex, 313)
+                    : AndroidNativeInputBridge.ReadL1(playerIndex) || AndroidNativeInputBridge.ReadR2(playerIndex) || AndroidNativeInputBridge.ReadL2(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad &&
                 (gamepad.rightTrigger.isPressed || gamepad.leftTrigger.isPressed);
         }
@@ -107,21 +135,23 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerDiagnostics(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadL3(playerIndex) || AndroidNativeInputBridge.ReadR3(playerIndex);
+                return AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadScan(playerIndex, 317) || AndroidNativeInputBridge.ReadScan(playerIndex, 318)
+                    : AndroidNativeInputBridge.ReadL3(playerIndex) || AndroidNativeInputBridge.ReadR3(playerIndex);
             return ReadLegacyDiagnostics(playerIndex);
         }
 
         public static bool ReadPlayerPause(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadStart(playerIndex);
+                return AndroidNativeInputBridge.ReadStart(playerIndex) || AndroidNativeInputBridge.ReadScan(playerIndex, 315);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.startButton.isPressed;
         }
 
         public static bool ReadPlayerShare(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadSelect(playerIndex);
+                return AndroidNativeInputBridge.ReadSelect(playerIndex) || AndroidNativeInputBridge.ReadScan(playerIndex, 314);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.selectButton.isPressed;
         }
 

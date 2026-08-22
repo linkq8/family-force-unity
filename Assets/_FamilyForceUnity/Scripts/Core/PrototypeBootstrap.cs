@@ -110,6 +110,7 @@ namespace FamilyForceUnity.Core
             boss.GetComponent<SpriteRenderer>().color = new Color(0.68f, 0.03f, 0.08f);
             GameObject crown = CreateBlock("Neon Captain Crown", Vector2.zero, new Vector2(0.72f, 0.18f), new Color(1f, 0.78f, 0.08f), 25);
             AttachPart(crown, boss.transform, new Vector2(0f, 1.08f));
+            boss.GetComponent<LaneDepthSorter>().Configure();
 
             CreateCrate(new Vector2(-3.2f, -1.25f), PickupKind.Food);
             CreateCrate(new Vector2(2.8f, -0.9f), PickupKind.Bat);
@@ -216,6 +217,7 @@ namespace FamilyForceUnity.Core
             controller.Configure(playerIndex, lightAttack, punchTwo, punchThree, kick, heavy, jump, special);
             var linkAssist = fighter.AddComponent<LinkCompanionAssist>();
             linkAssist.Configure(playerIndex, link != null ? link.PlaceholderColor : new Color(0.8f, 0.4f, 1f));
+            fighter.AddComponent<LaneDepthSorter>().Configure();
         }
 
         private MoveDefinition CreateMove(MoveId id, int startup, int active, int recovery,
@@ -247,6 +249,7 @@ namespace FamilyForceUnity.Core
             enemy.AddComponent<FighterStateMachine>();
             enemy.GetComponent<FighterStateMachine>().ConfigureHealth(health);
             enemy.AddComponent<PrototypeEnemy>().Configure(speed, damage, 75);
+            enemy.AddComponent<LaneDepthSorter>().Configure();
             return enemy;
         }
 
@@ -270,6 +273,7 @@ namespace FamilyForceUnity.Core
             var visual = enemy.AddComponent<PrototypeEnemyVisual>();
             visual.Configure(attackArm.transform);
             enemy.AddComponent<PrototypeEnemy>();
+            enemy.AddComponent<LaneDepthSorter>().Configure();
             return enemy;
         }
 

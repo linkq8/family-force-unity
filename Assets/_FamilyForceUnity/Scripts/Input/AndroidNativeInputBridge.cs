@@ -11,6 +11,7 @@ namespace FamilyForceUnity.Input
             public Vector2 LeftStick;
             public Vector2 Dpad;
             public readonly HashSet<int> Buttons = new();
+            public readonly HashSet<int> ScanButtons = new();
             public string HostFamily = "ANDROID";
             public string ControllerFamily = "GENERIC";
             public string Description = "Android controller";
@@ -46,6 +47,11 @@ namespace FamilyForceUnity.Input
             bool pressed = values[2] == "1";
             if (pressed) state.Buttons.Add(keyCode);
             else state.Buttons.Remove(keyCode);
+            if (values.Length > 3 && int.TryParse(values[3], out int scanCode))
+            {
+                if (pressed) state.ScanButtons.Add(scanCode);
+                else state.ScanButtons.Remove(scanCode);
+            }
 
             if (keyCode == 19) SetDpadKey(state, Vector2.up, pressed);
             else if (keyCode == 20) SetDpadKey(state, Vector2.down, pressed);
@@ -95,6 +101,18 @@ namespace FamilyForceUnity.Input
         {
             ControllerState state = GetPlayerState(playerIndex);
             return state != null && state.HostFamily == "XIAOMI_TV" && state.ControllerFamily == "PLAYSTATION";
+        }
+
+        public static bool UsesPlayStationScanMapping(int playerIndex)
+        {
+            ControllerState state = GetPlayerState(playerIndex);
+            return state != null && state.ControllerFamily == "PLAYSTATION" && state.HostFamily != "XIAOMI_TV";
+        }
+
+        public static bool ReadScan(int playerIndex, int scanCode)
+        {
+            ControllerState state = GetPlayerState(playerIndex);
+            return state != null && state.ScanButtons.Contains(scanCode);
         }
 
         public static string DescribePlayer(int playerIndex)

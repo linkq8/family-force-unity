@@ -195,6 +195,18 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
         return isXiaomiHost() && isLinuxGamepadScanCode(event.getScanCode());
     }
 
+    private static boolean isSonyController(KeyEvent event) {
+        InputDevice device = event.getDevice();
+        if (device == null) return false;
+        String identity = (device.getName() + " " + device.getDescriptor()).toLowerCase(Locale.ROOT);
+        return device.getVendorId() == 1356 || identity.contains("sony") ||
+                identity.contains("dualsense") || identity.contains("wireless controller");
+    }
+
+    private static boolean isSonyRawGamepadEvent(KeyEvent event) {
+        return isSonyController(event) && isLinuxGamepadScanCode(event.getScanCode());
+    }
+
     private static int normalizeKeyCode(KeyEvent event) {
         if (!isXiaomiRawGamepadEvent(event)) {
             return event.getKeyCode();
@@ -209,7 +221,7 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
 
     private static boolean isControllerKey(KeyEvent event) {
         int keyCode = event.getKeyCode();
-        if (isXiaomiRawGamepadEvent(event)) {
+        if (isXiaomiRawGamepadEvent(event) || isSonyRawGamepadEvent(event)) {
             return true;
         }
         if (!isControllerSource(event.getSource())) {
@@ -245,7 +257,7 @@ public class FamilyForceUnityGameActivity extends UnityPlayerGameActivity {
             announceDevice(event.getDeviceId());
             int keyCode = normalizeKeyCode(event);
             String payload = event.getDeviceId() + "|" + keyCode + "|" +
-                    (event.getAction() == KeyEvent.ACTION_DOWN ? "1" : "0");
+                    (event.getAction() == KeyEvent.ACTION_DOWN ? "1" : "0") + "|" + event.getScanCode();
             UnityPlayer.UnitySendMessage(RECEIVER, "OnNativeKey", payload);
             return true;
         }

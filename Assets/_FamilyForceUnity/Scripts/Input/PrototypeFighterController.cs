@@ -25,6 +25,9 @@ namespace FamilyForceUnity.Input
         public int PlayerIndex => playerIndex;
         private int comboStep;
         private float lastPunchTime = -10f;
+        private Vector2 jumpMomentum;
+        public string LastActionLabel { get; private set; } = "READY";
+        public float ActionLabelUntil { get; private set; }
 
         public void EquipTemporaryWeapon(int damageBonus) => WeaponBonus = Mathf.Max(WeaponBonus, damageBonus);
 
@@ -62,6 +65,18 @@ namespace FamilyForceUnity.Input
             {
                 activeInputMove = requestedMove;
                 hitApplied = false;
+                LastActionLabel = requestedMove.Id switch
+                {
+                    MoveId.Punch => $"COMBO {Mathf.Max(1, comboStep)}/3",
+                    MoveId.Kick => "KICK",
+                    MoveId.HeavyPunch => comboStep == 3 ? "COMBO FINISH" : "HEAVY",
+                    MoveId.Jump => "JUMP",
+                    MoveId.Special => "SPECIAL",
+                    _ => requestedMove.Id.ToString().ToUpperInvariant()
+                };
+                ActionLabelUntil = Time.time + 0.7f;
+                if (requestedMove.Id == MoveId.Jump)
+                    jumpMomentum = movement.sqrMagnitude > 0.08f ? movement.normalized : Vector2.zero;
             }
             attackHeld = attackPressed;
 
@@ -75,6 +90,7 @@ namespace FamilyForceUnity.Input
             {
                 float progress = fighter.StateTick / (float)Mathf.Max(1, fighter.CurrentMove.TotalTicks);
                 motor.SetVisualHeight(Mathf.Sin(Mathf.Clamp01(progress) * Mathf.PI) * 0.9f);
+                motor.SimulateMove(jumpMomentum * 0.72f);
             }
             else motor.SetVisualHeight(0f);
         }

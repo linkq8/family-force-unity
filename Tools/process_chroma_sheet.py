@@ -7,6 +7,34 @@ import sys
 from PIL import Image
 
 
+def remove_edge_connected_black(image: Image.Image) -> None:
+    """Remove only dark background reachable from the sheet edge, preserving black costume/hair pixels."""
+    width, height = image.size
+    pixels = image.load()
+    visited = bytearray(width * height)
+    stack = []
+    for x in range(width):
+        stack.extend((x, (height - 1) * width + x))
+    for y in range(height):
+        stack.extend((y * width, y * width + width - 1))
+    while stack:
+        index = stack.pop()
+        if visited[index]:
+            continue
+        visited[index] = 1
+        x, y = index % width, index // width
+        red, green, blue, alpha = pixels[x, y]
+        traversable = alpha == 0 or max(red, green, blue) < 42
+        if not traversable:
+            continue
+        if alpha != 0:
+            pixels[x, y] = (0, 0, 0, 0)
+        if x: stack.append(index - 1)
+        if x + 1 < width: stack.append(index + 1)
+        if y: stack.append(index - width)
+        if y + 1 < height: stack.append(index + width)
+
+
 def keep_largest_component(image: Image.Image) -> Image.Image:
     alpha = image.getchannel("A")
     width, height = image.size
@@ -72,11 +100,11 @@ def main() -> None:
         for x in range(source.width):
             red, green, blue, _ = pixels[x, y]
             magenta_strength = min(red, blue) - green
-            if max(red, green, blue) < 28:
-                pixels[x, y] = (0, 0, 0, 0)
-            elif red > 180 and blue > 180 and magenta_strength > 70:
+            if red > 180 and blue > 180 and magenta_strength > 70:
                 alpha = max(0, 255 - magenta_strength * 3)
                 pixels[x, y] = (red, green, blue, alpha)
+
+    remove_edge_connected_black(source)
 
     sheet = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
     cell = side // 4
