@@ -14,6 +14,8 @@ namespace FamilyForceUnity.Core
         [SerializeField] private MoveDefinition lightAttack;
         [SerializeField] private List<CharacterDefinition> roster = new();
         [SerializeField] private List<Sprite> essaAnimationFrames = new();
+        [SerializeField] private List<Sprite> enemyArt = new();
+        [SerializeField] private List<Sprite> itemArt = new();
 
         private readonly List<Texture2D> runtimeTextures = new();
         private readonly List<MoveDefinition> runtimeMoves = new();
@@ -28,11 +30,14 @@ namespace FamilyForceUnity.Core
         public IReadOnlyList<CharacterDefinition> Roster => roster;
         public bool MatchStarted => matchStarted;
 
-        public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions, List<Sprite> essaFrames = null)
+        public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions, List<Sprite> essaFrames = null,
+            List<Sprite> enemies = null, List<Sprite> items = null)
         {
             lightAttack = move;
             roster = definitions != null ? new List<CharacterDefinition>(definitions) : new List<CharacterDefinition>();
             essaAnimationFrames = essaFrames != null ? new List<Sprite>(essaFrames) : new List<Sprite>();
+            enemyArt = enemies != null ? new List<Sprite>(enemies) : new List<Sprite>();
+            itemArt = items != null ? new List<Sprite>(items) : new List<Sprite>();
         }
 
         private void Awake()
@@ -91,10 +96,13 @@ namespace FamilyForceUnity.Core
                 CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-5.7f, -1.2f), playerTwo, playerTwoLink, 1);
 
             GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(-1.2f, -0.3f));
+            ApplyEnemyArt(rami, 0, 0.78f);
             rami.GetComponent<FighterStateMachine>().ConfigureHealth(220);
             rami.GetComponent<PrototypeEnemy>().Configure(3.0f, GameSettings.EnemyDamage(7), GameSettings.EnemyCooldown(78));
             GameObject alleyA = CreateEnemy("Alley Runner A", new Vector2(-0.2f, 0.8f), new Color(0.2f, 0.55f, 0.78f), 200, 3.65f, 6);
+            ApplyEnemyArt(alleyA, 0, 0.78f);
             GameObject alleyB = CreateNeonSkater("Zayd — Neon Skater", new Vector2(0.7f, -1.25f));
+            ApplyEnemyArt(alleyB, 1, 0.78f);
             alleyB.GetComponent<FighterStateMachine>().ConfigureHealth(200);
             alleyB.GetComponent<PrototypeEnemy>().Configure(3.75f, GameSettings.EnemyDamage(6), GameSettings.EnemyCooldown(72));
 
@@ -102,10 +110,14 @@ namespace FamilyForceUnity.Core
             GameObject neonB = CreateEnemy("Neon Guard B", new Vector2(5.6f, -1.2f), new Color(0.58f, 0.12f, 0.68f), 260, 3.4f, 7);
             GameObject bruiserA = CreateEnemy("Dock Bruiser A", new Vector2(6.8f, 0.1f), new Color(0.75f, 0.28f, 0.12f), 340, 2.55f, 9);
             GameObject bruiserB = CreateEnemy("Dock Bruiser B", new Vector2(7.5f, -0.9f), new Color(0.68f, 0.22f, 0.1f), 340, 2.55f, 9);
+            ApplyEnemyArt(neonA, 0, 0.78f); ApplyEnemyArt(neonB, 1, 0.78f);
+            ApplyEnemyArt(bruiserA, 2, 0.86f); ApplyEnemyArt(bruiserB, 2, 0.86f);
 
             GameObject eliteA = CreateEnemy("Captain Elite A", new Vector2(10.7f, 0.9f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 8);
             GameObject eliteB = CreateEnemy("Captain Elite B", new Vector2(11.5f, -1.2f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 8);
+            ApplyEnemyArt(eliteA, 3, 0.8f); ApplyEnemyArt(eliteB, 3, 0.8f);
             GameObject boss = CreateStreetGuard("BOSS — Khalid, Neon Captain", new Vector2(12.8f, -0.15f));
+            ApplyEnemyArt(boss, 3, 0.82f);
             boss.GetComponent<FighterStateMachine>().ConfigureHealth(1400);
             boss.GetComponent<PrototypeEnemy>().Configure(3.15f, GameSettings.EnemyDamage(12), GameSettings.EnemyCooldown(62));
             boss.AddComponent<BossPhaseController>();
@@ -123,6 +135,7 @@ namespace FamilyForceUnity.Core
             var progression = matchRoot.AddComponent<StageProgressionController>();
             progression.Configure(Camera.main, gate, new List<GameObject> { rami, alleyA, alleyB },
                 new List<GameObject> { neonA, neonB, bruiserA, bruiserB }, new List<GameObject> { eliteA, eliteB, boss });
+            matchRoot.AddComponent<StageBackdropController>().Configure(progression);
             return true;
         }
 
@@ -334,6 +347,7 @@ namespace FamilyForceUnity.Core
             AttachPart(top, crate.transform, new Vector2(0f, 0.31f));
             GameObject badge = CreateBlock("Crate FF Badge", Vector2.zero, new Vector2(0.28f, 0.22f), new Color(0.08f, 0.42f, 0.75f), 9);
             AttachPart(badge, crate.transform, Vector2.zero);
+            ApplyItemArt(crate, 3, new Vector2(0.78f, 0.78f));
             crate.AddComponent<BreakableProp>().Configure(point => CreatePickup(point, drop));
         }
 
@@ -344,7 +358,31 @@ namespace FamilyForceUnity.Core
                 kind == PickupKind.Pipe ? new Color(0.65f, 0.72f, 0.78f) : new Color(0.72f, 0.5f, 0.22f);
             string label = kind == PickupKind.Food ? "Health Snack +28" : kind == PickupKind.Pipe ? "Steel Pipe +12" : "Wooden Bat +8";
             GameObject pickup = CreateBlock(label, position, size, color, 14);
+            int artIndex = kind == PickupKind.Food ? 5 : kind == PickupKind.Pipe ? 1 : 0;
+            ApplyItemArt(pickup, artIndex, kind == PickupKind.Food ? new Vector2(0.48f, 0.38f) : new Vector2(0.28f, 1.05f));
             pickup.AddComponent<StagePickup>().Configure(kind);
+        }
+
+        private void ApplyEnemyArt(GameObject enemy, int index, float scale)
+        {
+            if (enemy == null || index < 0 || index >= enemyArt.Count || enemyArt[index] == null) return;
+            SpriteRenderer rootRenderer = enemy.GetComponent<SpriteRenderer>();
+            rootRenderer.sprite = enemyArt[index];
+            rootRenderer.color = Color.white;
+            enemy.transform.localScale = new Vector3(scale, scale, 1f);
+            foreach (SpriteRenderer child in enemy.GetComponentsInChildren<SpriteRenderer>())
+                if (child != rootRenderer) child.enabled = false;
+            enemy.GetComponent<LaneDepthSorter>()?.Configure();
+        }
+
+        private void ApplyItemArt(GameObject item, int index, Vector2 size)
+        {
+            if (item == null || index < 0 || index >= itemArt.Count || itemArt[index] == null) return;
+            SpriteRenderer rootRenderer = item.GetComponent<SpriteRenderer>();
+            rootRenderer.sprite = itemArt[index]; rootRenderer.color = Color.white;
+            item.transform.localScale = new Vector3(size.x, size.y, 1f);
+            foreach (SpriteRenderer child in item.GetComponentsInChildren<SpriteRenderer>())
+                if (child != rootRenderer) child.enabled = false;
         }
 
         private GameObject CreateAndAttachPart(string label, Transform parent, Vector2 localPosition,

@@ -17,6 +17,10 @@ namespace FamilyForceUnity.Editor
         private const string ScenePath = Root + "/Scenes/VerticalSlice.unity";
         private const string MovePath = Root + "/Content/Base/Move_Punch.asset";
         private const string EssaSheetPath = Root + "/Art/Generated/Essa/essa-identity-basic-actions-runtime-f16-256x256-g4x4-fps10.png";
+        private const string EnemySheetPath = Root + "/Art/Generated/Enemies/family-force-enemy-models-v1.png";
+        private const string ItemSheetPath = Root + "/Art/Generated/Items/weapons-pickups-v1.png";
+        private const string StreetBackgroundPath = Root + "/Resources/StageArt/neon-street-v1.png";
+        private const string HarborBackgroundPath = Root + "/Resources/StageArt/harbor-warehouse-v1.png";
 
         [MenuItem("Tools/Family Force/Build Vertical Slice Foundation")]
         public static void CreateVerticalSlice()
@@ -26,13 +30,17 @@ namespace FamilyForceUnity.Editor
 
             MoveDefinition punch = LoadOrCreateMove();
             List<Sprite> essaFrames = ConfigureEssaSpriteSheet();
+            List<Sprite> enemySprites = ConfigureGridSheet(EnemySheetPath, 4, 1, 400f, "enemy");
+            List<Sprite> itemSprites = ConfigureGridSheet(ItemSheetPath, 4, 2, 320f, "item");
+            ConfigureSingleSprite(StreetBackgroundPath, 166.4f);
+            ConfigureSingleSprite(HarborBackgroundPath, 166.4f);
             List<CharacterDefinition> characters = CreateCharacters();
             CreateCustomerPack(characters);
             // Persist ScriptableObjects before serializing them into the scene.
             // Without this, Unity writes fileID: 0 references in a fresh project.
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            CreateScene(punch, characters, essaFrames);
+            CreateScene(punch, characters, essaFrames, enemySprites, itemSprites);
             ConfigureProject();
 
             AssetDatabase.SaveAssets();
@@ -145,6 +153,51 @@ namespace FamilyForceUnity.Editor
                 .ToList();
         }
 
+        private static List<Sprite> ConfigureGridSheet(string path, int columns, int rows, float pixelsPerUnit, string prefix)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) return new List<Sprite>();
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = pixelsPerUnit;
+            importer.mipmapEnabled = false;
+            importer.filterMode = FilterMode.Point;
+            importer.alphaIsTransparency = true;
+            importer.textureCompression = TextureImporterCompression.Compressed;
+            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+            int cellWidth = width / columns;
+            int cellHeight = height / rows;
+            var slices = new List<SpriteMetaData>(columns * rows);
+            for (int row = 0; row < rows; row++)
+                for (int column = 0; column < columns; column++)
+                    slices.Add(new SpriteMetaData
+                    {
+                        name = $"{prefix}_{row * columns + column}",
+                        rect = new Rect(column * cellWidth, (rows - 1 - row) * cellHeight, cellWidth, cellHeight),
+                        pivot = new Vector2(0.5f, 0.08f), alignment = (int)SpriteAlignment.Custom
+                    });
+            importer.spritesheet = slices.ToArray();
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().OrderBy(sprite => sprite.name).ToList();
+        }
+
+        private static Sprite ConfigureSingleSprite(string path, float pixelsPerUnit)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null) return null;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = pixelsPerUnit;
+            importer.mipmapEnabled = false;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.textureCompression = TextureImporterCompression.Compressed;
+            TextureImporterPlatformSettings android = importer.GetPlatformTextureSettings("Android");
+            android.overridden = true; android.maxTextureSize = 2048; android.format = TextureImporterFormat.ASTC_6x6;
+            importer.SetPlatformTextureSettings(android);
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
         private static List<CharacterDefinition> CreateCharacters()
         {
             var specifications = new[]
@@ -190,12 +243,13 @@ namespace FamilyForceUnity.Editor
             serializedPack.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters, List<Sprite> essaFrames)
+        private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters, List<Sprite> essaFrames,
+            List<Sprite> enemySprites, List<Sprite> itemSprites)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("Family Force — Prototype");
             var bootstrap = root.AddComponent<PrototypeBootstrap>();
-            bootstrap.ConfigureContent(punch, characters, essaFrames);
+            bootstrap.ConfigureContent(punch, characters, essaFrames, enemySprites, itemSprites);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.MarkSceneDirty(scene);
 
@@ -207,8 +261,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force";
             PlayerSettings.productName = "Family Force";
-            PlayerSettings.bundleVersion = "0.30.2";
-            PlayerSettings.Android.bundleVersionCode = 31;
+            PlayerSettings.bundleVersion = "0.40.0";
+            PlayerSettings.Android.bundleVersionCode = 32;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
