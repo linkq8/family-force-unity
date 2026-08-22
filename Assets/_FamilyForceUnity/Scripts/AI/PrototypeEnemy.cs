@@ -31,6 +31,12 @@ namespace FamilyForceUnity.AI
         private void FixedUpdate()
         {
             if (target == null || tokens == null) return;
+            if (fighter.IsDefeated)
+            {
+                motor.SimulateMove(Vector2.zero);
+                if (ownsToken) { tokens.Release(this); ownsToken = false; }
+                return;
+            }
 
             if (attackCooldown > 0) attackCooldown--;
             if (!hitApplied && fighter.IsMoveActive && targetFighter != null)

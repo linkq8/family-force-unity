@@ -17,8 +17,15 @@ namespace FamilyForceUnity.Core
         private readonly List<Texture2D> runtimeTextures = new();
         private readonly List<MoveDefinition> runtimeMoves = new();
         private bool matchStarted;
+        private GameObject matchRoot;
+        private CharacterDefinition lastPlayerOne;
+        private CharacterDefinition lastPlayerOneLink;
+        private CharacterDefinition lastPlayerTwo;
+        private CharacterDefinition lastPlayerTwoLink;
+        private bool lastHasPlayerTwo;
 
         public IReadOnlyList<CharacterDefinition> Roster => roster;
+        public bool MatchStarted => matchStarted;
 
         public void ConfigureContent(MoveDefinition move, List<CharacterDefinition> definitions, List<Sprite> essaFrames = null)
         {
@@ -35,6 +42,9 @@ namespace FamilyForceUnity.Core
             EnsureSingleton<AndroidNativeInputBridge>("Android Input Bridge");
             EnsureSingleton<ControllerDiagnosticsOverlay>("Controller Diagnostics");
             EnsureSingleton<GitHubUpdateService>("GitHub Update Service");
+            EnsureSingleton<CombatFeedback>("Combat Feedback");
+            var hud = EnsureSingleton<CombatHudController>("Combat HUD");
+            hud.Configure(this);
             BuildCamera();
 
             var tokens = EnsureSingleton<AttackTokenManager>("Attack Token Manager");
@@ -66,6 +76,12 @@ namespace FamilyForceUnity.Core
         {
             if (matchStarted || playerOne == null) return false;
             matchStarted = true;
+            lastPlayerOne = playerOne;
+            lastPlayerOneLink = playerOneLink;
+            lastHasPlayerTwo = hasPlayerTwo;
+            lastPlayerTwo = playerTwo;
+            lastPlayerTwoLink = playerTwoLink;
+            matchRoot = new GameObject("Active Combat Stage");
 
             BuildArena();
             CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-3f, -0.5f), playerOne, 0);
@@ -76,6 +92,18 @@ namespace FamilyForceUnity.Core
             CreateEnemy("Enemy B", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
             CreateEnemy("Enemy C", new Vector2(6.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
             return true;
+        }
+
+        public void RestartMatch()
+        {
+            if (!matchStarted || lastPlayerOne == null) return;
+            if (matchRoot != null)
+            {
+                matchRoot.SetActive(false);
+                Destroy(matchRoot);
+            }
+            matchStarted = false;
+            BeginMatch(lastPlayerOne, lastPlayerOneLink, lastHasPlayerTwo, lastPlayerTwo, lastPlayerTwoLink);
         }
 
         private void OnDestroy()
@@ -210,6 +238,7 @@ namespace FamilyForceUnity.Core
         private GameObject CreateBlock(string label, Vector2 position, Vector2 size, Color color, int order)
         {
             var item = new GameObject(label);
+            if (matchRoot != null) item.transform.SetParent(matchRoot.transform, false);
             item.transform.position = new Vector3(position.x, position.y, position.y);
             item.transform.localScale = new Vector3(size.x, size.y, 1f);
             var renderer = item.AddComponent<SpriteRenderer>();

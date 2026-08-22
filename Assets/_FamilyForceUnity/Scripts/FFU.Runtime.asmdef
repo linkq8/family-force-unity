@@ -4,7 +4,8 @@
   "references": [
     "Unity.InputSystem",
     "UnityEngine.UnityWebRequestModule",
-    "UnityEngine.AndroidJNIModule"
+    "UnityEngine.AndroidJNIModule",
+    "UnityEngine.AudioModule"
   ],
   "autoReferenced": true,
   "overrideReferences": false,

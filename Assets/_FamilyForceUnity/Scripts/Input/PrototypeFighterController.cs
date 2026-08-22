@@ -18,6 +18,7 @@ namespace FamilyForceUnity.Input
         private bool attackHeld;
         private MoveDefinition activeInputMove;
         private bool hitApplied;
+        public float FacingSign { get; private set; } = 1f;
 
         private void Awake()
         {
@@ -39,6 +40,7 @@ namespace FamilyForceUnity.Input
         private void FixedUpdate()
         {
             Vector2 movement = ReadMovement();
+            if (Mathf.Abs(movement.x) > 0.1f) FacingSign = Mathf.Sign(movement.x);
             bool canWalk = fighter.State is FighterState.Idle or FighterState.Walk;
             if (canWalk)
                 motor.SimulateMove(movement);
@@ -114,10 +116,11 @@ namespace FamilyForceUnity.Input
             foreach (var enemy in FindObjectsByType<FamilyForceUnity.AI.PrototypeEnemy>(FindObjectsSortMode.None))
             {
                 Vector2 delta = enemy.transform.position - transform.position;
-                if (delta.x < -0.35f || delta.x > reach || Mathf.Abs(delta.y) > 0.8f) continue;
+                float forwardDistance = delta.x * FacingSign;
+                if (forwardDistance < -0.15f || forwardDistance > reach || Mathf.Abs(delta.y) > 0.8f) continue;
                 var target = enemy.GetComponent<FighterStateMachine>();
                 target.ApplyHit(move.Damage, move.HitPauseTicks, move.Id is MoveId.HeavyPunch or MoveId.Special);
-                enemy.GetComponent<LaneMotor>().ApplyKnockback(new Vector2(move.Knockback.x * 0.22f, move.Knockback.y * 0.12f));
+                enemy.GetComponent<LaneMotor>().ApplyKnockback(new Vector2(move.Knockback.x * 0.22f * FacingSign, move.Knockback.y * 0.12f));
             }
         }
     }

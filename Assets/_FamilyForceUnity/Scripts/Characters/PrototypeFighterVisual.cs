@@ -12,10 +12,12 @@ namespace FamilyForceUnity.Characters
         private Color baseColor;
         private Sprite[] animationFrames;
         private float lastX;
+        private FamilyForceUnity.Input.PrototypeFighterController controller;
 
         public void Configure(SpriteRenderer bodyRenderer, GameObject punchObject, Sprite[] frames = null)
         {
             fighter = GetComponent<FighterStateMachine>();
+            controller = GetComponent<FamilyForceUnity.Input.PrototypeFighterController>();
             body = bodyRenderer;
             punchVisual = punchObject;
             baseScale = transform.localScale;
@@ -91,7 +93,8 @@ namespace FamilyForceUnity.Characters
         private void UpdateSpriteAnimation()
         {
             float deltaX = transform.position.x - lastX;
-            if (Mathf.Abs(deltaX) > 0.001f) body.flipX = deltaX < 0f;
+            if (controller != null) body.flipX = controller.FacingSign < 0f;
+            else if (Mathf.Abs(deltaX) > 0.001f) body.flipX = deltaX < 0f;
             lastX = transform.position.x;
 
             int frame;
@@ -126,6 +129,12 @@ namespace FamilyForceUnity.Characters
             }
 
             body.sprite = animationFrames[frame];
+            if (punchVisual != null)
+            {
+                Vector3 effectPosition = punchVisual.transform.localPosition;
+                effectPosition.x = Mathf.Abs(effectPosition.x) * (body.flipX ? -1f : 1f);
+                punchVisual.transform.localPosition = effectPosition;
+            }
             Color actionColor = moveId switch
             {
                 MoveId.HeavyPunch => new Color(1f, 0.42f, 0.24f),
@@ -134,6 +143,15 @@ namespace FamilyForceUnity.Characters
                 _ => Color.white
             };
             body.color = attacking && active ? actionColor : Color.white;
+            if (fighter.State == FighterState.Hurt) body.color = new Color(1f, 0.4f, 0.4f);
+            if (fighter.State == FighterState.Knockdown)
+                transform.localRotation = Quaternion.Euler(0f, 0f, body.flipX ? -82f : 82f);
+            else if (fighter.State == FighterState.GetUp)
+            {
+                float remaining = 1f - Mathf.Clamp01(fighter.StateTick / 18f);
+                transform.localRotation = Quaternion.Euler(0f, 0f, (body.flipX ? -82f : 82f) * remaining);
+            }
+            else transform.localRotation = Quaternion.identity;
             float scale = attacking && active && moveId == MoveId.HeavyPunch ? 1.08f : 1f;
             transform.localScale = new Vector3(baseScale.x * scale, baseScale.y * scale, baseScale.z);
             if (punchVisual != null)

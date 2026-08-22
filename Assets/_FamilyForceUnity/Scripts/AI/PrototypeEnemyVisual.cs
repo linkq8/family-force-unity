@@ -27,6 +27,9 @@ namespace FamilyForceUnity.AI
             foreach (SpriteRenderer item in renderers) item.color = tint;
             if (fighter.State == FighterState.Knockdown)
                 transform.localRotation = Quaternion.Euler(0f, 0f, 82f);
+            else if (fighter.State == FighterState.GetUp)
+                transform.localRotation = Quaternion.Euler(0f, 0f, 82f * (1f - Mathf.Clamp01(fighter.StateTick / 18f)));
+            else transform.localRotation = Quaternion.identity;
         }
     }
 }

@@ -29,6 +29,8 @@ namespace FamilyForceUnity.Characters
 
         public FighterState State => state;
         public int Health => health;
+        public int MaxHealth => 100;
+        public bool IsDefeated => health <= 0;
         public int StateTick => stateTick;
         public MoveDefinition CurrentMove => currentMove;
         public bool IsMoveActive => state == FighterState.Attack && currentMove != null && currentMove.IsActiveAt(stateTick);
@@ -50,6 +52,14 @@ namespace FamilyForceUnity.Characters
             {
                 Enter(FighterState.Idle);
             }
+            else if (state == FighterState.Knockdown && health > 0 && stateTick >= 45)
+            {
+                Enter(FighterState.GetUp);
+            }
+            else if (state == FighterState.GetUp && stateTick >= 18)
+            {
+                Enter(FighterState.Idle);
+            }
         }
 
         public bool TryAttack(MoveDefinition move)
@@ -67,6 +77,7 @@ namespace FamilyForceUnity.Characters
             health = Mathf.Max(0, health - Mathf.Max(0, damage));
             frozenTicks = Mathf.Max(frozenTicks, hitPauseTicks);
             Enter(knockdown || health == 0 ? FighterState.Knockdown : FighterState.Hurt);
+            CombatFeedback.PlayHit(knockdown || damage >= 20);
         }
 
         public void SetWalking(bool walking)

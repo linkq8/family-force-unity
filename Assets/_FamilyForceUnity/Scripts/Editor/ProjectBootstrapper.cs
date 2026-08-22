@@ -67,6 +67,27 @@ namespace FamilyForceUnity.Editor
                 EditorApplication.Exit(0);
         }
 
+        [MenuItem("Tools/Family Force Unity/Build Release APK")]
+        public static void BuildReleaseApk()
+        {
+            CreateVerticalSlice();
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+            EditorUserBuildSettings.buildAppBundle = false;
+            EditorUserBuildSettings.androidCreateSymbols = AndroidCreateSymbols.Disabled;
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { ScenePath },
+                locationPathName = "Builds/Android/FamilyForceUnity-release.apk",
+                target = BuildTarget.Android,
+                options = BuildOptions.CompressWithLz4HC
+            };
+            var report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
+                throw new System.Exception($"Android release build failed: {report.summary.result}");
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+
         private static MoveDefinition LoadOrCreateMove()
         {
             var move = AssetDatabase.LoadAssetAtPath<MoveDefinition>(MovePath);
@@ -186,8 +207,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force Unity";
             PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.9.0";
-            PlayerSettings.Android.bundleVersionCode = 20;
+            PlayerSettings.bundleVersion = "0.10.0";
+            PlayerSettings.Android.bundleVersionCode = 21;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

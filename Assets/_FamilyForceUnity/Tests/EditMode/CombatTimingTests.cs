@@ -1,6 +1,8 @@
 using FamilyForceUnity.AI;
 using FamilyForceUnity.Combat;
+using FamilyForceUnity.Characters;
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 
 namespace FamilyForceUnity.Tests
@@ -42,6 +44,23 @@ namespace FamilyForceUnity.Tests
             Object.DestroyImmediate(third);
             Object.DestroyImmediate(managerObject);
         }
+
+        [Test]
+        public void KnockdownRecoversThroughGetUpWhenHealthRemains()
+        {
+            var fighterObject = new GameObject("Recovering Fighter");
+            var fighter = fighterObject.AddComponent<FighterStateMachine>();
+            MethodInfo fixedUpdate = typeof(FighterStateMachine).GetMethod("FixedUpdate",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            fighter.ApplyHit(20, 0, true);
+            Assert.That(fighter.State, Is.EqualTo(FighterState.Knockdown));
+            for (int i = 0; i < 45; i++) fixedUpdate.Invoke(fighter, null);
+            Assert.That(fighter.State, Is.EqualTo(FighterState.GetUp));
+            for (int i = 0; i < 18; i++) fixedUpdate.Invoke(fighter, null);
+            Assert.That(fighter.State, Is.EqualTo(FighterState.Idle));
+
+            Object.DestroyImmediate(fighterObject);
+        }
     }
 }
-
