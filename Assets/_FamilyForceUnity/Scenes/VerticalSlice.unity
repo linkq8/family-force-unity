@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1208762657
+--- !u!1 &1736774691
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1208762659}
-  - component: {fileID: 1208762658}
+  - component: {fileID: 1736774693}
+  - component: {fileID: 1736774692}
   m_Layer: 0
   m_Name: "Family Force \u2014 Prototype"
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1208762658
+--- !u!114 &1736774692
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1208762657}
+  m_GameObject: {fileID: 1736774691}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea35f469ad71842a792e9bee8bebc63c, type: 3}
@@ -172,10 +172,10 @@ MonoBehaviour:
   - {fileID: 274629307300697112, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
   - {fileID: 1802668045441117893, guid: bacfa3a8267b546b093e0f39364f9ea8, type: 3}
   enemyArt:
-  - {fileID: 297761703447499198, guid: 8f12c74a3a5eb463cb7bcf50e9b33d4f, type: 3}
-  - {fileID: 3680619090928529440, guid: 8f12c74a3a5eb463cb7bcf50e9b33d4f, type: 3}
-  - {fileID: -6810697999950630716, guid: 8f12c74a3a5eb463cb7bcf50e9b33d4f, type: 3}
-  - {fileID: 1779747271024799556, guid: 8f12c74a3a5eb463cb7bcf50e9b33d4f, type: 3}
+  - {fileID: 297761703447499198, guid: c25dcd851cc864ee492f7f70ef29c4b4, type: 3}
+  - {fileID: 3680619090928529440, guid: c25dcd851cc864ee492f7f70ef29c4b4, type: 3}
+  - {fileID: -6810697999950630716, guid: c25dcd851cc864ee492f7f70ef29c4b4, type: 3}
+  - {fileID: 1779747271024799556, guid: c25dcd851cc864ee492f7f70ef29c4b4, type: 3}
   itemArt:
   - {fileID: 1729840402284382006, guid: 3b581613435d349d7b09a75493460767, type: 3}
   - {fileID: 148264454483829304, guid: 3b581613435d349d7b09a75493460767, type: 3}
@@ -185,13 +185,13 @@ MonoBehaviour:
   - {fileID: -8553582175004071258, guid: 3b581613435d349d7b09a75493460767, type: 3}
   - {fileID: -6785928222664068552, guid: 3b581613435d349d7b09a75493460767, type: 3}
   - {fileID: -7537718560547632580, guid: 3b581613435d349d7b09a75493460767, type: 3}
---- !u!4 &1208762659
+--- !u!4 &1736774693
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1208762657}
+  m_GameObject: {fileID: 1736774691}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -204,4 +204,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1208762659}
+  - {fileID: 1736774693}
