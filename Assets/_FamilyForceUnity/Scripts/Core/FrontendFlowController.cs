@@ -155,15 +155,17 @@ namespace FamilyForceUnity.Core
             switch (pauseFocus)
             {
                 case 0: ResumeGame(); break;
-                case 1: showControls = true; break;
-                case 2: Time.timeScale = 1f; isPaused = false; bootstrap.RestartMatch(); break;
-                case 3: updater?.Activate(); break;
-                case 4:
+                case 1: updater?.Activate(); break;
+                case 2:
                     Time.timeScale = 1f;
                     isPaused = false;
+                    showControls = false;
                     bootstrap.EndMatch();
                     state = FrontendState.Title;
+                    titleFocus = 1;
                     break;
+                case 3: showControls = true; break;
+                case 4: Time.timeScale = 1f; isPaused = false; bootstrap.RestartMatch(); break;
             }
         }
 
@@ -227,11 +229,21 @@ namespace FamilyForceUnity.Core
                 GUI.Label(new Rect(left, Screen.height * 0.25f, width, Screen.height * 0.64f), controls, rowStyle);
                 return;
             }
-            string updateText = updater != null ? updater.Status : "UPDATE";
-            string[] options = { "RESUME", "CONTROLS", "RESTART MISSION", updateText, "EXIT TO MAIN MENU" };
+            string updateText = updater != null ? updater.Status : "CHECK FOR UPDATE";
+            string[] options =
+            {
+                GameLocalization.T("RESUME", "متابعة"),
+                updateText,
+                GameLocalization.T("RETURN TO MAIN MENU", "العودة للقائمة الرئيسية"),
+                GameLocalization.T("CONTROLS", "أزرار التحكم"),
+                GameLocalization.T("RESTART MISSION", "إعادة المهمة")
+            };
+            float rowHeight = Mathf.Clamp(Screen.height * 0.09f, 42f, 58f);
+            float firstRow = Screen.height * 0.25f;
             for (int i = 0; i < options.Length; i++)
-                DrawTitleButton(left, Screen.height * 0.28f + i * 58f, width, options[i], pauseFocus == i);
-            GUI.Label(new Rect(left, Screen.height * 0.88f, width, 32f), "D-pad / Confirm / Back", hintStyle);
+                DrawTitleButton(left, firstRow + i * rowHeight, width, options[i], pauseFocus == i);
+            GUI.Label(new Rect(left, Mathf.Min(Screen.height - 30f, firstRow + options.Length * rowHeight + 8f), width, 28f),
+                GameLocalization.T("D-pad / Confirm / Back", "الاتجاهات / تأكيد / رجوع"), hintStyle);
         }
 
         private void OnDestroy()
