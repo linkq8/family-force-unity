@@ -17,7 +17,7 @@ namespace FamilyForceUnity.Editor
         private const string ScenePath = Root + "/Scenes/VerticalSlice.unity";
         private const string MovePath = Root + "/Content/Base/Move_Punch.asset";
         private const string EssaSheetPath = Root + "/Art/Generated/Essa/essa-identity-basic-actions-runtime-f16-256x256-g4x4-fps10.png";
-        private const string EnemySheetPath = Root + "/Art/Generated/Enemies/family-force-enemy-models-v1.png";
+        private const string EnemySheetPath = Root + "/Art/Generated/Enemies/family-force-enemy-models-family-safe-v3.png";
         private const string ItemSheetPath = Root + "/Art/Generated/Items/weapons-pickups-v1.png";
         private const string StreetBackgroundPath = Root + "/Resources/StageArt/neon-street-v1.png";
         private const string HarborBackgroundPath = Root + "/Resources/StageArt/harbor-warehouse-v1.png";
@@ -261,8 +261,8 @@ namespace FamilyForceUnity.Editor
         {
             PlayerSettings.companyName = "Family Force";
             PlayerSettings.productName = "Family Force";
-            PlayerSettings.bundleVersion = "0.40.0";
-            PlayerSettings.Android.bundleVersionCode = 32;
+            PlayerSettings.bundleVersion = "0.40.1";
+            PlayerSettings.Android.bundleVersionCode = 33;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
