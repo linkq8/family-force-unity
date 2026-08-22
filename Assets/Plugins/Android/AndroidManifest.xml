@@ -7,6 +7,8 @@
   <uses-feature android:name="android.hardware.vulkan.version" android:required="false" />
   <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
   <application android:appCategory="game"
+               android:icon="@mipmap/app_icon"
+               android:banner="@drawable/tv_banner"
                android:enableOnBackInvokedCallback="true"
                android:extractNativeLibs="true">
     <provider android:name="com.familyforceunity.input.UpdateFileProvider"
@@ -18,7 +20,7 @@
               android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
               android:enabled="true"
               android:exported="true"
-              android:hardwareAccelerated="false"
+              android:hardwareAccelerated="true"
               android:launchMode="singleTask"
               android:resizeableActivity="true"
               android:screenOrientation="fullUser"

@@ -78,4 +78,18 @@ namespace FamilyForceUnity.Tests
             Object.DestroyImmediate(fighterObject);
         }
     }
+
+    public sealed class GameSettingsTests
+    {
+        [Test]
+        public void KidsDifficultyReducesDamageAndIncreasesRecoveryTime()
+        {
+            bool previous = Core.GameSettings.KidsMode;
+            Core.GameSettings.KidsMode = true;
+            Assert.Less(Core.GameSettings.EnemyDamage(10), 10);
+            Assert.Greater(Core.GameSettings.EnemyCooldown(60), 60);
+            Assert.Greater(Core.GameSettings.BetweenWaveHeal, 18);
+            Core.GameSettings.KidsMode = previous;
+        }
+    }
 }

@@ -92,9 +92,11 @@ namespace FamilyForceUnity.Core
 
             GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(-1.2f, -0.3f));
             rami.GetComponent<FighterStateMachine>().ConfigureHealth(220);
-            rami.GetComponent<PrototypeEnemy>().Configure(3.0f, 6, 88);
+            rami.GetComponent<PrototypeEnemy>().Configure(3.0f, GameSettings.EnemyDamage(7), GameSettings.EnemyCooldown(78));
             GameObject alleyA = CreateEnemy("Alley Runner A", new Vector2(-0.2f, 0.8f), new Color(0.2f, 0.55f, 0.78f), 200, 3.65f, 6);
-            GameObject alleyB = CreateEnemy("Alley Runner B", new Vector2(0.7f, -1.25f), new Color(0.22f, 0.48f, 0.72f), 200, 3.65f, 6);
+            GameObject alleyB = CreateNeonSkater("Zayd — Neon Skater", new Vector2(0.7f, -1.25f));
+            alleyB.GetComponent<FighterStateMachine>().ConfigureHealth(200);
+            alleyB.GetComponent<PrototypeEnemy>().Configure(3.75f, GameSettings.EnemyDamage(6), GameSettings.EnemyCooldown(72));
 
             GameObject neonA = CreateEnemy("Neon Guard A", new Vector2(4.6f, 0.9f), new Color(0.66f, 0.15f, 0.73f), 260, 3.4f, 7);
             GameObject neonB = CreateEnemy("Neon Guard B", new Vector2(5.6f, -1.2f), new Color(0.58f, 0.12f, 0.68f), 260, 3.4f, 7);
@@ -105,7 +107,7 @@ namespace FamilyForceUnity.Core
             GameObject eliteB = CreateEnemy("Captain Elite B", new Vector2(11.5f, -1.2f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 8);
             GameObject boss = CreateStreetGuard("BOSS — Khalid, Neon Captain", new Vector2(12.8f, -0.15f));
             boss.GetComponent<FighterStateMachine>().ConfigureHealth(1400);
-            boss.GetComponent<PrototypeEnemy>().Configure(3.15f, 10, 68);
+            boss.GetComponent<PrototypeEnemy>().Configure(3.15f, GameSettings.EnemyDamage(12), GameSettings.EnemyCooldown(62));
             boss.AddComponent<BossPhaseController>();
             boss.transform.localScale *= 1.55f;
             boss.GetComponent<SpriteRenderer>().color = new Color(0.68f, 0.03f, 0.08f);
@@ -151,6 +153,13 @@ namespace FamilyForceUnity.Core
             BeginMatch(lastPlayerOne, lastPlayerOneLink, lastHasPlayerTwo, lastPlayerTwo, lastPlayerTwoLink);
         }
 
+        public void EndMatch()
+        {
+            if (matchRoot != null) Destroy(matchRoot);
+            matchRoot = null;
+            matchStarted = false;
+        }
+
         private void OnDestroy()
         {
             foreach (var texture in runtimeTextures)
@@ -187,6 +196,14 @@ namespace FamilyForceUnity.Core
             CreateBlock("Lane Stripe", new Vector2(3f, -1.45f), new Vector2(30f, 0.06f), new Color(0.95f, 0.67f, 0.16f), -9);
             CreateBlock("Shop Sign", new Vector2(-4.7f, 1.1f), new Vector2(2.2f, 0.42f), new Color(0.88f, 0.18f, 0.58f), -12);
             CreateBlock("Arcade Sign", new Vector2(3.8f, 1.05f), new Vector2(2.5f, 0.48f), new Color(0.12f, 0.78f, 0.9f), -12);
+            CreateBlock("Sidewalk", new Vector2(3f, -0.18f), new Vector2(30f, 0.28f), new Color(0.28f, 0.3f, 0.34f), -8);
+            CreateBlock("Neon Reflection Blue", new Vector2(3.7f, -1.03f), new Vector2(3.8f, 0.08f), new Color(0.08f, 0.54f, 0.72f, 0.65f), -8);
+            CreateBlock("Neon Reflection Pink", new Vector2(-4.6f, -0.88f), new Vector2(2.8f, 0.07f), new Color(0.78f, 0.12f, 0.52f, 0.6f), -8);
+            for (int lamp = -7; lamp <= 13; lamp += 5)
+            {
+                CreateBlock($"Lamp Post {lamp}", new Vector2(lamp, 0.35f), new Vector2(0.08f, 1.75f), new Color(0.12f, 0.14f, 0.2f), -7);
+                CreateBlock($"Lamp Glow {lamp}", new Vector2(lamp, 1.2f), new Vector2(0.34f, 0.18f), new Color(1f, 0.72f, 0.2f, 0.82f), -6);
+            }
             for (int i = -11; i <= 17; i += 2)
                 CreateBlock($"Window {i}", new Vector2(i, 0.72f), new Vector2(0.72f, 0.55f), new Color(0.13f, 0.3f, 0.5f), -13);
         }
@@ -239,6 +256,13 @@ namespace FamilyForceUnity.Core
             var renderer = punch.AddComponent<SpriteRenderer>();
             renderer.sprite = CreateSolidSprite(Color.Lerp(characterColor, Color.white, 0.65f));
             renderer.sortingOrder = 12;
+            GameObject spark = new GameObject("Impact Spark");
+            spark.transform.SetParent(punch.transform, false);
+            spark.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            spark.transform.localScale = new Vector3(0.34f, 1.8f, 1f);
+            var sparkRenderer = spark.AddComponent<SpriteRenderer>();
+            sparkRenderer.sprite = CreateSolidSprite(Color.Lerp(characterColor, Color.white, 0.88f));
+            sparkRenderer.sortingOrder = 13;
             punch.SetActive(false);
             return punch;
         }
@@ -250,7 +274,7 @@ namespace FamilyForceUnity.Core
             enemy.AddComponent<LaneMotor>();
             enemy.AddComponent<FighterStateMachine>();
             enemy.GetComponent<FighterStateMachine>().ConfigureHealth(health);
-            enemy.AddComponent<PrototypeEnemy>().Configure(speed, damage, 75);
+            enemy.AddComponent<PrototypeEnemy>().Configure(speed, GameSettings.EnemyDamage(damage), GameSettings.EnemyCooldown(75));
             enemy.AddComponent<LaneDepthSorter>().Configure();
             return enemy;
         }
@@ -279,11 +303,37 @@ namespace FamilyForceUnity.Core
             return enemy;
         }
 
+        private GameObject CreateNeonSkater(string label, Vector2 position)
+        {
+            var enemy = CreateBlock(label, position, new Vector2(0.58f, 0.72f), new Color(0.08f, 0.12f, 0.22f), 8);
+            enemy.AddComponent<LaneMotor>();
+            enemy.AddComponent<FighterStateMachine>();
+            GameObject head = CreateAndAttachPart("Skater Head", enemy.transform, new Vector2(0f, 0.63f), new Vector2(0.44f, 0.4f), new Color(0.72f, 0.46f, 0.3f), 10);
+            CreateAndAttachPart("Skater Cap", enemy.transform, new Vector2(-0.08f, 0.84f), new Vector2(0.55f, 0.13f), new Color(0.08f, 0.82f, 0.9f), 12);
+            CreateAndAttachPart("Skater Visor", head.transform, new Vector2(0.2f, 0.02f), new Vector2(0.22f, 0.08f), new Color(1f, 0.28f, 0.62f), 13);
+            CreateAndAttachPart("Skater Jacket Stripe", enemy.transform, new Vector2(0f, 0.12f), new Vector2(0.62f, 0.1f), new Color(0.1f, 0.85f, 0.92f), 11);
+            CreateAndAttachPart("Skater Left Leg", enemy.transform, new Vector2(-0.18f, -0.6f), new Vector2(0.2f, 0.58f), new Color(0.12f, 0.18f, 0.34f), 7);
+            CreateAndAttachPart("Skater Right Leg", enemy.transform, new Vector2(0.18f, -0.6f), new Vector2(0.2f, 0.58f), new Color(0.12f, 0.18f, 0.34f), 7);
+            GameObject attackArm = CreateAndAttachPart("Skater Attack Arm", enemy.transform, new Vector2(-0.46f, 0.12f), new Vector2(0.16f, 0.68f), new Color(0.72f, 0.46f, 0.3f), 9);
+            CreateAndAttachPart("Skater Right Arm", enemy.transform, new Vector2(0.46f, 0.12f), new Vector2(0.16f, 0.68f), new Color(0.72f, 0.46f, 0.3f), 9);
+            GameObject board = CreateAndAttachPart("Neon Board", enemy.transform, new Vector2(0f, -0.96f), new Vector2(0.9f, 0.1f), new Color(1f, 0.26f, 0.58f), 12);
+            CreateAndAttachPart("Board Wheel L", board.transform, new Vector2(-0.34f, -0.14f), new Vector2(0.12f, 0.12f), new Color(0.9f, 0.75f, 0.16f), 13);
+            CreateAndAttachPart("Board Wheel R", board.transform, new Vector2(0.34f, -0.14f), new Vector2(0.12f, 0.12f), new Color(0.9f, 0.75f, 0.16f), 13);
+            enemy.AddComponent<PrototypeEnemyVisual>().Configure(attackArm.transform);
+            enemy.AddComponent<PrototypeEnemy>();
+            enemy.AddComponent<LaneDepthSorter>().Configure();
+            return enemy;
+        }
+
         private void CreateCrate(Vector2 position, PickupKind drop)
         {
             GameObject crate = CreateBlock("Breakable Supply Crate", position, new Vector2(0.72f, 0.72f), new Color(0.55f, 0.3f, 0.12f), 6);
             GameObject stripe = CreateBlock("Crate Stripe", Vector2.zero, new Vector2(0.12f, 0.76f), new Color(0.9f, 0.62f, 0.18f), 7);
             AttachPart(stripe, crate.transform, Vector2.zero);
+            GameObject top = CreateBlock("Crate Top", Vector2.zero, new Vector2(0.76f, 0.1f), new Color(0.86f, 0.53f, 0.18f), 8);
+            AttachPart(top, crate.transform, new Vector2(0f, 0.31f));
+            GameObject badge = CreateBlock("Crate FF Badge", Vector2.zero, new Vector2(0.28f, 0.22f), new Color(0.08f, 0.42f, 0.75f), 9);
+            AttachPart(badge, crate.transform, Vector2.zero);
             crate.AddComponent<BreakableProp>().Configure(point => CreatePickup(point, drop));
         }
 

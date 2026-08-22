@@ -28,6 +28,9 @@ namespace FamilyForceUnity.Core
         private bool diagnosticsHeld;
         private bool pauseHeld;
         private bool isPaused;
+        private bool pauseConfirmHeld;
+        private int pauseFocus;
+        private bool showControls;
         private bool axisHeld;
         private string statusMessage;
         private int titleFocus;
@@ -61,11 +64,16 @@ namespace FamilyForceUnity.Core
             if (state == FrontendState.Playing && pause && !pauseHeld)
             {
                 isPaused = !isPaused;
+                showControls = false;
                 Time.timeScale = isPaused ? 0f : 1f;
             }
             pauseHeld = pause;
 
-            if (state == FrontendState.Playing) return;
+            if (state == FrontendState.Playing)
+            {
+                if (isPaused) HandlePauseInput();
+                return;
+            }
 
             bool confirm = ReadConfirm(0);
             bool cancel = ReadCancel();
@@ -77,13 +85,14 @@ namespace FamilyForceUnity.Core
                 else if (!axisHeld && Mathf.Abs(navigation.y) >= Mathf.Abs(navigation.x))
                 {
                     axisHeld = true;
-                    titleFocus = (titleFocus + (navigation.y < 0f ? 1 : 2)) % 3;
+                    titleFocus = (titleFocus + (navigation.y < 0f ? 1 : 3)) % 4;
                 }
                 if (confirm && !confirmHeld)
                 {
                     if (titleFocus == 0) state = FrontendState.CharacterSelect;
                     else if (titleFocus == 1) updater?.Activate();
-                    else GameLocalization.Toggle();
+                    else if (titleFocus == 2) GameLocalization.Toggle();
+                    else GameSettings.KidsMode = !GameSettings.KidsMode;
                 }
             }
             else
@@ -113,6 +122,56 @@ namespace FamilyForceUnity.Core
 
             confirmHeld = confirm;
             cancelHeld = cancel;
+        }
+
+        private void HandlePauseInput()
+        {
+            Vector2 navigation = ReadNavigation();
+            if (navigation.sqrMagnitude < 0.25f) axisHeld = false;
+            else if (!axisHeld && Mathf.Abs(navigation.y) >= Mathf.Abs(navigation.x))
+            {
+                axisHeld = true;
+                pauseFocus = (pauseFocus + (navigation.y < 0f ? 1 : 4)) % 5;
+            }
+
+            bool confirm = ReadConfirm(0);
+            bool cancel = ReadCancel();
+            if (cancel && !cancelHeld)
+            {
+                if (showControls) showControls = false;
+                else ResumeGame();
+            }
+            else if (confirm && !pauseConfirmHeld)
+            {
+                if (showControls) showControls = false;
+                else ExecutePauseChoice();
+            }
+            pauseConfirmHeld = confirm;
+            cancelHeld = cancel;
+        }
+
+        private void ExecutePauseChoice()
+        {
+            switch (pauseFocus)
+            {
+                case 0: ResumeGame(); break;
+                case 1: showControls = true; break;
+                case 2: Time.timeScale = 1f; isPaused = false; bootstrap.RestartMatch(); break;
+                case 3: updater?.Activate(); break;
+                case 4:
+                    Time.timeScale = 1f;
+                    isPaused = false;
+                    bootstrap.EndMatch();
+                    state = FrontendState.Title;
+                    break;
+            }
+        }
+
+        private void ResumeGame()
+        {
+            isPaused = false;
+            showControls = false;
+            Time.timeScale = 1f;
         }
 
         private void HandleSelection(Vector2 navigation)
@@ -160,8 +219,19 @@ namespace FamilyForceUnity.Core
             DrawSolid(new Rect(0, 0, Screen.width, Screen.height), new Color(0.015f, 0.02f, 0.055f, 0.82f));
             float width = Mathf.Min(Screen.width * 0.8f, 760f);
             float left = (Screen.width - width) * 0.5f;
-            GUI.Label(new Rect(left, Screen.height * 0.35f, width, 80f), "PAUSED", titleStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.53f, width, 40f), "Press START to continue", headingStyle);
+            GUI.Label(new Rect(left, Screen.height * 0.12f, width, 64f), showControls ? "CONTROLS" : "PAUSED", titleStyle);
+            if (showControls)
+            {
+                string profile = ControllerDeviceRouter.DescribeAutomaticProfile(0);
+                string controls = $"{profile}\n\nD-PAD / LEFT STICK   MOVE\nSQUARE   PUNCH / COMBO\nTRIANGLE   KICK\nCIRCLE   HEAVY\nX   JUMP\nR1   SPECIAL\nL1 / L2 / R2   LINK\nOPTIONS   PAUSE\n\nCIRCLE / BACK   RETURN";
+                GUI.Label(new Rect(left, Screen.height * 0.25f, width, Screen.height * 0.64f), controls, rowStyle);
+                return;
+            }
+            string updateText = updater != null ? updater.Status : "UPDATE";
+            string[] options = { "RESUME", "CONTROLS", "RESTART MISSION", updateText, "EXIT TO MAIN MENU" };
+            for (int i = 0; i < options.Length; i++)
+                DrawTitleButton(left, Screen.height * 0.28f + i * 58f, width, options[i], pauseFocus == i);
+            GUI.Label(new Rect(left, Screen.height * 0.88f, width, 32f), "D-pad / Confirm / Back", hintStyle);
         }
 
         private void OnDestroy()
@@ -190,11 +260,12 @@ namespace FamilyForceUnity.Core
             GUI.Label(new Rect(left, Screen.height * 0.16f, width, 96), "FAMILY FORCE", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.34f, width, 60), "UNITY", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.51f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
-            DrawTitleButton(left, Screen.height * 0.65f, width, GameLocalization.T("START GAME", "ابدأ اللعب"), titleFocus == 0);
+            DrawTitleButton(left, Screen.height * 0.59f, width, GameLocalization.T("START GAME", "ابدأ اللعب"), titleFocus == 0);
             string updateLabel = updater != null ? updater.Status : "CHECK FOR UPDATE";
-            DrawTitleButton(left, Screen.height * 0.74f, width, updateLabel, titleFocus == 1);
-            DrawTitleButton(left, Screen.height * 0.83f, width, GameLocalization.Arabic ? "LANGUAGE: العربية" : "LANGUAGE: ENGLISH", titleFocus == 2);
-            GUI.Label(new Rect(left, Screen.height * 0.93f, width, 28), $"VERSION {Application.version}   D-pad / Confirm", hintStyle);
+            DrawTitleButton(left, Screen.height * 0.68f, width, updateLabel, titleFocus == 1);
+            DrawTitleButton(left, Screen.height * 0.77f, width, GameLocalization.Arabic ? "LANGUAGE: العربية" : "LANGUAGE: ENGLISH", titleFocus == 2);
+            DrawTitleButton(left, Screen.height * 0.86f, width, $"DIFFICULTY: {GameSettings.DifficultyLabel}", titleFocus == 3);
+            GUI.Label(new Rect(left, Screen.height - 22f, width, 20), $"VERSION {Application.version}   D-pad / Confirm", hintStyle);
         }
 
         private void DrawTitleButton(float left, float top, float width, string label, bool focused)
