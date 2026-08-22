@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FamilyForceUnity.Content
 {
-    [CreateAssetMenu(menuName = "Family Force Unity/Content/Character", fileName = "Character_")]
+    [CreateAssetMenu(menuName = "Family Force/Content/Character", fileName = "Character_")]
     public sealed class CharacterDefinition : ScriptableObject
     {
         [SerializeField] private string characterId;

@@ -257,9 +257,8 @@ namespace FamilyForceUnity.Core
         {
             float width = Mathf.Min(Screen.width * 0.83f, 960f);
             float left = (Screen.width - width) * 0.5f;
-            GUI.Label(new Rect(left, Screen.height * 0.16f, width, 96), "FAMILY FORCE", titleStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.34f, width, 60), "UNITY", titleStyle);
-            GUI.Label(new Rect(left, Screen.height * 0.51f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
+            GUI.Label(new Rect(left, Screen.height * 0.19f, width, 96), "FAMILY FORCE", titleStyle);
+            GUI.Label(new Rect(left, Screen.height * 0.43f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
             DrawTitleButton(left, Screen.height * 0.59f, width, GameLocalization.T("START GAME", "ابدأ اللعب"), titleFocus == 0);
             string updateLabel = updater != null ? updater.Status : "CHECK FOR UPDATE";
             DrawTitleButton(left, Screen.height * 0.68f, width, updateLabel, titleFocus == 1);

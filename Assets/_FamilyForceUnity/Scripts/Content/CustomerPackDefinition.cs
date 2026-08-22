@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace FamilyForceUnity.Content
 {
-    [CreateAssetMenu(menuName = "Family Force Unity/Content/Customer Pack", fileName = "CustomerPack_")]
+    [CreateAssetMenu(menuName = "Family Force/Content/Customer Pack", fileName = "CustomerPack_")]
     public sealed class CustomerPackDefinition : ScriptableObject
     {
         [SerializeField] private string packId = "base";
-        [SerializeField] private string customerDisplayName = "Family Force Unity";
+        [SerializeField] private string customerDisplayName = "Family Force";
         [SerializeField] private Sprite logo;
         [SerializeField] private Color primaryColor = new(0.09f, 0.14f, 0.24f);
         [SerializeField] private Color accentColor = new(1f, 0.63f, 0.16f);
@@ -21,4 +21,3 @@ namespace FamilyForceUnity.Content
         public IReadOnlyList<CharacterDefinition> Characters => characters;
     }
 }
-

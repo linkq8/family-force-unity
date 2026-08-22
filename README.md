@@ -1,4 +1,4 @@
-# Family Force Unity
+# Family Force
 
 Independent Unity 6 project for a retro-modern 2D beat-'em-up targeting Android phones, foldables, and Android TV.
 
@@ -19,7 +19,6 @@ This directory is independent. No files from the legacy Android project are refe
 
 After Unity finishes importing packages, run:
 
-`Tools > Family Force Unity > Build Vertical Slice Foundation`
+`Tools > Family Force > Build Vertical Slice Foundation`
 
 The command creates the bootstrap scene, placeholder character data, move data, and Android-oriented project settings.
-

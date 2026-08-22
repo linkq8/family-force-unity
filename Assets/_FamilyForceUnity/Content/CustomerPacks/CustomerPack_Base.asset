@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CustomerPack_Base
   m_EditorClassIdentifier: FFU.Runtime::FamilyForceUnity.Content.CustomerPackDefinition
   packId: base
-  customerDisplayName: Family Force Unity
+  customerDisplayName: Family Force
   logo: {fileID: 0}
   primaryColor: {r: 0.09, g: 0.14, b: 0.24, a: 1}
   accentColor: {r: 1, g: 0.63, b: 0.16, a: 1}

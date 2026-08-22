@@ -18,7 +18,7 @@ namespace FamilyForceUnity.Editor
         private const string MovePath = Root + "/Content/Base/Move_Punch.asset";
         private const string EssaSheetPath = Root + "/Art/Generated/Essa/essa-identity-basic-actions-runtime-f16-256x256-g4x4-fps10.png";
 
-        [MenuItem("Tools/Family Force Unity/Build Vertical Slice Foundation")]
+        [MenuItem("Tools/Family Force/Build Vertical Slice Foundation")]
         public static void CreateVerticalSlice()
         {
             EnsureFolder(Root + "/Content/Base");
@@ -37,7 +37,7 @@ namespace FamilyForceUnity.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("Family Force Unity foundation created successfully.");
+            Debug.Log("Family Force foundation created successfully.");
         }
 
         public static void CreateVerticalSliceBatch()
@@ -46,7 +46,7 @@ namespace FamilyForceUnity.Editor
             EditorApplication.Exit(0);
         }
 
-        [MenuItem("Tools/Family Force Unity/Build Development APK")]
+        [MenuItem("Tools/Family Force/Build Development APK")]
         public static void BuildDevelopmentApk()
         {
             CreateVerticalSlice();
@@ -67,7 +67,7 @@ namespace FamilyForceUnity.Editor
                 EditorApplication.Exit(0);
         }
 
-        [MenuItem("Tools/Family Force Unity/Build Release APK")]
+        [MenuItem("Tools/Family Force/Build Release APK")]
         public static void BuildReleaseApk()
         {
             CreateVerticalSlice();
@@ -193,7 +193,7 @@ namespace FamilyForceUnity.Editor
         private static void CreateScene(MoveDefinition punch, List<CharacterDefinition> characters, List<Sprite> essaFrames)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var root = new GameObject("Family Force Unity — Prototype");
+            var root = new GameObject("Family Force — Prototype");
             var bootstrap = root.AddComponent<PrototypeBootstrap>();
             bootstrap.ConfigureContent(punch, characters, essaFrames);
             EditorUtility.SetDirty(bootstrap);
@@ -205,10 +205,10 @@ namespace FamilyForceUnity.Editor
 
         private static void ConfigureProject()
         {
-            PlayerSettings.companyName = "Family Force Unity";
-            PlayerSettings.productName = "Family Force Unity";
-            PlayerSettings.bundleVersion = "0.30.0";
-            PlayerSettings.Android.bundleVersionCode = 29;
+            PlayerSettings.companyName = "Family Force";
+            PlayerSettings.productName = "Family Force";
+            PlayerSettings.bundleVersion = "0.30.1";
+            PlayerSettings.Android.bundleVersionCode = 30;
             PlayerSettings.defaultScreenWidth = 640;
             PlayerSettings.defaultScreenHeight = 360;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

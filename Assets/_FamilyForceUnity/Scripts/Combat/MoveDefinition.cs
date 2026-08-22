@@ -23,7 +23,7 @@ namespace FamilyForceUnity.Combat
         public Vector2 Size;
     }
 
-    [CreateAssetMenu(menuName = "Family Force Unity/Combat/Move", fileName = "Move_")]
+    [CreateAssetMenu(menuName = "Family Force/Combat/Move", fileName = "Move_")]
     public sealed class MoveDefinition : ScriptableObject
     {
         [SerializeField] private MoveId id;
