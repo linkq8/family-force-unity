@@ -12,11 +12,16 @@ namespace FamilyForceUnity.Core
         private bool confirmHeld;
         private GUIStyle label;
         private GUIStyle banner;
+        private bool joinHeld;
 
         public void Configure(PrototypeBootstrap owner) => bootstrap = owner;
 
         private void Update()
         {
+            bool join = bootstrap != null && bootstrap.MatchStarted && ControllerDeviceRouter.ControllerCount >= 2 &&
+                ControllerDeviceRouter.ReadPlayerConfirm(1);
+            if (join && !joinHeld) bootstrap.JoinPlayerTwo();
+            joinHeld = join;
             if (bootstrap == null || !bootstrap.MatchStarted || (!AllEnemiesDefeated() && !AllPlayersDefeated())) return;
             bool confirm = ControllerDeviceRouter.ReadPlayerConfirm(0) ||
                 (Keyboard.current != null && Keyboard.current.enterKey.isPressed);
@@ -36,7 +41,15 @@ namespace FamilyForceUnity.Core
                 FighterStateMachine fighter = players[i].GetComponent<FighterStateMachine>();
                 DrawHealth(new Rect(24, 22 + i * 46, 300, 24), $"P{i + 1}", fighter.Health, fighter.MaxHealth,
                     new Color(0.15f, 0.75f, 0.95f));
+                LinkCompanionAssist link = players[i].GetComponent<LinkCompanionAssist>();
+                string linkStatus = link != null && link.CooldownRemaining > 0f ? $"LINK {link.CooldownRemaining:0.0}s" : "LINK READY";
+                string weapon = players[i].WeaponBonus > 0 ? $"  WEAPON +{players[i].WeaponBonus}" : "";
+                GUI.Label(new Rect(330, 22 + i * 46, 260, 24), linkStatus + weapon, label);
             }
+            bool hasP2 = false;
+            foreach (var player in players) if (player.PlayerIndex == 1) hasP2 = true;
+            if (!hasP2 && ControllerDeviceRouter.ControllerCount >= 2)
+                GUI.Label(new Rect(Screen.width * 0.3f, Screen.height - 50, Screen.width * 0.4f, 34), GameLocalization.T("P2 — PRESS X TO JOIN", "اللاعب 2 — اضغط X للانضمام"), banner);
 
             PrototypeEnemy[] enemies = FindObjectsByType<PrototypeEnemy>(FindObjectsSortMode.None);
             for (int i = 0; i < enemies.Length; i++)
@@ -48,14 +61,15 @@ namespace FamilyForceUnity.Core
 
             StageProgressionController stage = FindFirstObjectByType<StageProgressionController>();
             if (stage != null && !stage.IsComplete)
-                GUI.Label(new Rect(Screen.width * 0.38f, 18, Screen.width * 0.24f, 32), $"WAVE {stage.CurrentWave} / {stage.WaveCount}", banner);
+                GUI.Label(new Rect(Screen.width * 0.38f, 18, Screen.width * 0.24f, 32), GameLocalization.T($"WAVE {stage.CurrentWave} / {stage.WaveCount}", $"الموجة {stage.CurrentWave} / {stage.WaveCount}"), banner);
 
             bool victory = AllEnemiesDefeated();
             bool defeat = AllPlayersDefeated();
             if (!victory && !defeat) return;
             DrawSolid(new Rect(0, Screen.height * 0.34f, Screen.width, Screen.height * 0.28f), new Color(0.02f, 0.03f, 0.08f, 0.9f));
-            GUI.Label(new Rect(0, Screen.height * 0.39f, Screen.width, 54), victory ? "STAGE CLEAR!" : "TRY AGAIN", banner);
-            GUI.Label(new Rect(0, Screen.height * 0.51f, Screen.width, 38), "Press X / Confirm to restart", banner);
+            GUI.Label(new Rect(0, Screen.height * 0.39f, Screen.width, 54), victory ? GameLocalization.T("MISSION COMPLETE!", "اكتملت المهمة!") : GameLocalization.T("TRY AGAIN", "حاول مرة أخرى"), banner);
+            string result = victory && stage != null ? $"{Mathf.FloorToInt(stage.ElapsedSeconds / 60f):00}:{Mathf.FloorToInt(stage.ElapsedSeconds % 60f):00}   " : "";
+            GUI.Label(new Rect(0, Screen.height * 0.51f, Screen.width, 38), result + GameLocalization.T("Press X / Confirm to restart", "اضغط X لإعادة المهمة"), banner);
         }
 
         private void DrawHealth(Rect rect, string title, int health, int maximum, Color color)

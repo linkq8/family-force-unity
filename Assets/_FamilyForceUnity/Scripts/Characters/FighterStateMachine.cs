@@ -22,6 +22,7 @@ namespace FamilyForceUnity.Characters
     {
         [SerializeField] private FighterState state = FighterState.Idle;
         [SerializeField] private int health = 100;
+        [SerializeField] private int maxHealth = 100;
 
         private MoveDefinition currentMove;
         private int stateTick;
@@ -29,7 +30,7 @@ namespace FamilyForceUnity.Characters
 
         public FighterState State => state;
         public int Health => health;
-        public int MaxHealth => 100;
+        public int MaxHealth => maxHealth;
         public bool IsDefeated => health <= 0;
         public int StateTick => stateTick;
         public MoveDefinition CurrentMove => currentMove;
@@ -83,6 +84,12 @@ namespace FamilyForceUnity.Characters
         public void Heal(int amount)
         {
             if (health > 0) health = Mathf.Min(MaxHealth, health + Mathf.Max(0, amount));
+        }
+
+        public void ConfigureHealth(int value)
+        {
+            maxHealth = Mathf.Max(1, value);
+            health = maxHealth;
         }
 
         public void SetWalking(bool walking)

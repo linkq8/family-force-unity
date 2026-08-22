@@ -9,6 +9,8 @@ namespace FamilyForceUnity.Input
     {
         private int playerIndex;
         private MoveDefinition lightAttack;
+        private MoveDefinition comboPunchTwo;
+        private MoveDefinition comboPunchThree;
         private MoveDefinition kick;
         private MoveDefinition heavyAttack;
         private MoveDefinition jump;
@@ -20,6 +22,9 @@ namespace FamilyForceUnity.Input
         private bool hitApplied;
         public float FacingSign { get; private set; } = 1f;
         public int WeaponBonus { get; private set; }
+        public int PlayerIndex => playerIndex;
+        private int comboStep;
+        private float lastPunchTime = -10f;
 
         public void EquipTemporaryWeapon(int damageBonus) => WeaponBonus = Mathf.Max(WeaponBonus, damageBonus);
 
@@ -29,11 +34,13 @@ namespace FamilyForceUnity.Input
             fighter = GetComponent<FighterStateMachine>();
         }
 
-        public void Configure(int index, MoveDefinition attack, MoveDefinition kickMove,
+        public void Configure(int index, MoveDefinition attack, MoveDefinition punchTwo, MoveDefinition punchThree, MoveDefinition kickMove,
             MoveDefinition heavyMove, MoveDefinition jumpMove, MoveDefinition specialMove)
         {
             playerIndex = Mathf.Clamp(index, 0, 1);
             lightAttack = attack;
+            comboPunchTwo = punchTwo;
+            comboPunchThree = punchThree;
             kick = kickMove;
             heavyAttack = heavyMove;
             jump = jumpMove;
@@ -104,7 +111,18 @@ namespace FamilyForceUnity.Input
             Keyboard keyboard = Keyboard.current;
             bool keyboardPressed = keyboard != null &&
                 (playerIndex == 0 ? keyboard.spaceKey.isPressed : keyboard.enterKey.isPressed);
-            if (keyboardPressed || ControllerDeviceRouter.ReadPlayerLightAttack(playerIndex)) return lightAttack;
+            bool lightPressed = keyboardPressed || ControllerDeviceRouter.ReadPlayerLightAttack(playerIndex);
+            if (lightPressed)
+            {
+                if (!attackHeld)
+                {
+                    if (Time.fixedTime - lastPunchTime > 0.85f) comboStep = 0;
+                    comboStep = comboStep % 3 + 1;
+                    lastPunchTime = Time.fixedTime;
+                    return comboStep == 1 ? lightAttack : comboStep == 2 ? comboPunchTwo : comboPunchThree;
+                }
+                return activeInputMove ?? lightAttack;
+            }
             if (ControllerDeviceRouter.ReadPlayerKick(playerIndex)) return kick;
             if (ControllerDeviceRouter.ReadPlayerHeavyAttack(playerIndex)) return heavyAttack;
             if (ControllerDeviceRouter.ReadPlayerJump(playerIndex)) return jump;

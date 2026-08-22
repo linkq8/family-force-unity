@@ -96,6 +96,14 @@ namespace FamilyForceUnity.Input
                 (gamepad.rightShoulder.isPressed || gamepad.leftShoulder.isPressed);
         }
 
+        public static bool ReadPlayerLink(int playerIndex)
+        {
+            if (AndroidNativeInputBridge.IsActive)
+                return AndroidNativeInputBridge.ReadR2(playerIndex) || AndroidNativeInputBridge.ReadL2(playerIndex);
+            return GetController(playerIndex) is Gamepad gamepad &&
+                (gamepad.rightTrigger.isPressed || gamepad.leftTrigger.isPressed);
+        }
+
         public static bool ReadPlayerDiagnostics(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)

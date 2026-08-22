@@ -62,5 +62,20 @@ namespace FamilyForceUnity.Tests
 
             Object.DestroyImmediate(fighterObject);
         }
+
+        [Test]
+        public void ConfiguredHealthAndFoodHealingStayWithinMaximum()
+        {
+            var fighterObject = new GameObject("Health Fighter");
+            var fighter = fighterObject.AddComponent<FighterStateMachine>();
+            fighter.ConfigureHealth(240);
+            fighter.ApplyHit(80, 0, false);
+            fighter.Heal(28);
+            Assert.That(fighter.MaxHealth, Is.EqualTo(240));
+            Assert.That(fighter.Health, Is.EqualTo(188));
+            fighter.Heal(999);
+            Assert.That(fighter.Health, Is.EqualTo(240));
+            Object.DestroyImmediate(fighterObject);
+        }
     }
 }

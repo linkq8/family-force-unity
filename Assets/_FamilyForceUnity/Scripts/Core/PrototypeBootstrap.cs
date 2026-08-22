@@ -85,18 +85,42 @@ namespace FamilyForceUnity.Core
             matchRoot = new GameObject("Active Combat Stage");
 
             BuildArena();
-            CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-3f, -0.5f), playerOne, 0);
+            CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-3f, -0.5f), playerOne, playerOneLink, 0);
             if (hasPlayerTwo && playerTwo != null)
-                CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, 1);
+                CreateFighter($"P2 — {playerTwo.DisplayName}", new Vector2(-1.8f, -1.2f), playerTwo, playerTwoLink, 1);
 
             GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(1.8f, -0.3f));
-            GameObject enemyB = CreateEnemy("Neon Guard", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f));
-            GameObject enemyC = CreateEnemy("Dock Bruiser", new Vector2(7.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f));
+            rami.GetComponent<FighterStateMachine>().ConfigureHealth(75);
+            rami.GetComponent<PrototypeEnemy>().Configure(3.0f, 7, 78);
+            GameObject enemyB = CreateEnemy("Neon Guard", new Vector2(5.2f, 0.8f), new Color(0.66f, 0.15f, 0.73f), 70, 3.4f, 6);
+            GameObject enemyC = CreateEnemy("Dock Bruiser", new Vector2(7.2f, -1.3f), new Color(0.75f, 0.28f, 0.12f), 110, 2.55f, 11);
+            GameObject boss = CreateStreetGuard("Khalid — Neon Captain", new Vector2(7.6f, -0.15f));
+            boss.GetComponent<FighterStateMachine>().ConfigureHealth(240);
+            boss.GetComponent<PrototypeEnemy>().Configure(3.15f, 14, 58);
+            boss.AddComponent<BossPhaseController>();
+            boss.transform.localScale *= 1.22f;
+            boss.GetComponent<SpriteRenderer>().color = new Color(0.42f, 0.08f, 0.12f);
             CreateCrate(new Vector2(0.2f, -1.25f), PickupKind.Food);
             CreateCrate(new Vector2(4.2f, -0.9f), PickupKind.Bat);
+            CreateCrate(new Vector2(6.8f, 0.9f), PickupKind.Pipe);
             GameObject gate = CreateBlock("Wave Gate", new Vector2(3.05f, -0.2f), new Vector2(0.12f, 3.9f), new Color(0.96f, 0.25f, 0.16f, 0.78f), 20);
             var progression = matchRoot.AddComponent<StageProgressionController>();
-            progression.Configure(Camera.main, gate, new List<GameObject> { rami }, new List<GameObject> { enemyB, enemyC });
+            progression.Configure(Camera.main, gate, new List<GameObject> { rami },
+                new List<GameObject> { enemyB, enemyC }, new List<GameObject> { boss });
+            return true;
+        }
+
+        public bool JoinPlayerTwo()
+        {
+            if (!matchStarted) return false;
+            foreach (PrototypeFighterController player in FindObjectsByType<PrototypeFighterController>(FindObjectsSortMode.None))
+                if (player.PlayerIndex == 1) return false;
+            CharacterDefinition hero = lastPlayerTwo != null ? lastPlayerTwo : roster[Mathf.Min(1, roster.Count - 1)];
+            CharacterDefinition link = lastPlayerTwoLink != null ? lastPlayerTwoLink : roster[Mathf.Min(2, roster.Count - 1)];
+            PrototypeFighterController p1 = FindFirstObjectByType<PrototypeFighterController>();
+            Vector2 position = p1 != null ? (Vector2)p1.transform.position + new Vector2(-0.8f, -0.55f) : new Vector2(-2f, -1f);
+            CreateFighter($"P2 — {hero.DisplayName}", position, hero, link, 1);
+            lastHasPlayerTwo = true;
             return true;
         }
 
@@ -152,7 +176,7 @@ namespace FamilyForceUnity.Core
                 CreateBlock($"Window {i}", new Vector2(i, 0.72f), new Vector2(0.72f, 0.55f), new Color(0.13f, 0.3f, 0.5f), -13);
         }
 
-        private void CreateFighter(string label, Vector2 position, CharacterDefinition character, int playerIndex)
+        private void CreateFighter(string label, Vector2 position, CharacterDefinition character, CharacterDefinition link, int playerIndex)
         {
             float heightScale = Mathf.Clamp(character.HeightCentimeters / 135f, 0.82f, 1.35f);
             var fighter = CreateBlock(label, position, new Vector2(0.65f, heightScale), character.PlaceholderColor, 10);
@@ -171,11 +195,15 @@ namespace FamilyForceUnity.Core
             var visual = fighter.AddComponent<PrototypeFighterVisual>();
             visual.Configure(fighter.GetComponent<SpriteRenderer>(), punchVisual, animatedFrames);
             var controller = fighter.AddComponent<PrototypeFighterController>();
+            MoveDefinition punchTwo = CreateMove(MoveId.Punch, 4, 3, 7, 12, 4, new Vector2(1.65f, 0.22f));
+            MoveDefinition punchThree = CreateMove(MoveId.HeavyPunch, 7, 4, 13, 20, 6, new Vector2(2.6f, 0.38f));
             MoveDefinition kick = CreateMove(MoveId.Kick, 6, 4, 10, 14, 4, new Vector2(1.8f, 0.3f));
             MoveDefinition heavy = CreateMove(MoveId.HeavyPunch, 11, 4, 16, 24, 7, new Vector2(3f, 0.45f));
             MoveDefinition jump = CreateMove(MoveId.Jump, 2, 20, 4, 0, 0, Vector2.zero);
             MoveDefinition special = CreateMove(MoveId.Special, 8, 9, 22, 34, 9, new Vector2(4f, 0.7f));
-            controller.Configure(playerIndex, lightAttack, kick, heavy, jump, special);
+            controller.Configure(playerIndex, lightAttack, punchTwo, punchThree, kick, heavy, jump, special);
+            var linkAssist = fighter.AddComponent<LinkCompanionAssist>();
+            linkAssist.Configure(playerIndex, link != null ? link.PlaceholderColor : new Color(0.8f, 0.4f, 1f));
         }
 
         private MoveDefinition CreateMove(MoveId id, int startup, int active, int recovery,
@@ -199,12 +227,14 @@ namespace FamilyForceUnity.Core
             return punch;
         }
 
-        private GameObject CreateEnemy(string label, Vector2 position, Color color)
+        private GameObject CreateEnemy(string label, Vector2 position, Color color, int health = 100,
+            float speed = 3.1f, int damage = 7)
         {
             var enemy = CreateBlock(label, position, new Vector2(0.62f, 1.2f), color, 8);
             enemy.AddComponent<LaneMotor>();
             enemy.AddComponent<FighterStateMachine>();
-            enemy.AddComponent<PrototypeEnemy>();
+            enemy.GetComponent<FighterStateMachine>().ConfigureHealth(health);
+            enemy.AddComponent<PrototypeEnemy>().Configure(speed, damage, 75);
             return enemy;
         }
 
@@ -242,8 +272,10 @@ namespace FamilyForceUnity.Core
         private void CreatePickup(Vector3 position, PickupKind kind)
         {
             Vector2 size = kind == PickupKind.Food ? new Vector2(0.42f, 0.32f) : new Vector2(0.16f, 1.05f);
-            Color color = kind == PickupKind.Food ? new Color(0.25f, 0.9f, 0.35f) : new Color(0.72f, 0.5f, 0.22f);
-            GameObject pickup = CreateBlock(kind == PickupKind.Food ? "Health Snack +28" : "Wooden Bat +8", position, size, color, 14);
+            Color color = kind == PickupKind.Food ? new Color(0.25f, 0.9f, 0.35f) :
+                kind == PickupKind.Pipe ? new Color(0.65f, 0.72f, 0.78f) : new Color(0.72f, 0.5f, 0.22f);
+            string label = kind == PickupKind.Food ? "Health Snack +28" : kind == PickupKind.Pipe ? "Steel Pipe +12" : "Wooden Bat +8";
+            GameObject pickup = CreateBlock(label, position, size, color, 14);
             pickup.AddComponent<StagePickup>().Configure(kind);
         }
 

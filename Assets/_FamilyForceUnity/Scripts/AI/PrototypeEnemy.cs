@@ -16,6 +16,20 @@ namespace FamilyForceUnity.AI
         private MoveDefinition attack;
         private bool hitApplied;
         private int attackCooldown;
+        private int attackDamage = 7;
+        private int cooldownTicks = 75;
+
+        public void Configure(float movementSpeed, int damage, int cooldown)
+        {
+            attackDamage = Mathf.Max(1, damage);
+            cooldownTicks = Mathf.Max(30, cooldown);
+            GetComponent<LaneMotor>()?.SetSpeed(movementSpeed);
+            if (attack != null)
+            {
+                Destroy(attack);
+                attack = CreateAttack();
+            }
+        }
 
         private void Start()
         {
@@ -25,7 +39,7 @@ namespace FamilyForceUnity.AI
             var player = FindFirstObjectByType<PrototypeFighterController>();
             target = player != null ? player.transform : null;
             targetFighter = player != null ? player.GetComponent<FighterStateMachine>() : null;
-            attack = MoveDefinition.CreateRuntime(MoveId.Punch, 12, 4, 20, 7, 3, new Vector2(0.7f, 0.12f));
+            attack = CreateAttack();
         }
 
         private void FixedUpdate()
@@ -57,7 +71,7 @@ namespace FamilyForceUnity.AI
                 if (ownsToken && attackCooldown == 0 && fighter.TryAttack(attack))
                 {
                     hitApplied = false;
-                    attackCooldown = 75;
+                    attackCooldown = cooldownTicks;
                 }
             }
             else
@@ -81,5 +95,8 @@ namespace FamilyForceUnity.AI
         {
             if (attack != null) Destroy(attack);
         }
+
+        private MoveDefinition CreateAttack() =>
+            MoveDefinition.CreateRuntime(MoveId.Punch, 12, 4, 20, attackDamage, 3, new Vector2(0.7f, 0.12f));
     }
 }

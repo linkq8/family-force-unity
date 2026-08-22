@@ -44,6 +44,9 @@ namespace FamilyForceUnity.Characters
         {
             horizontalBounds = new Vector2(Mathf.Min(minimum, maximum), Mathf.Max(minimum, maximum));
             GroundPosition = new Vector2(Mathf.Clamp(GroundPosition.x, horizontalBounds.x, horizontalBounds.y), GroundPosition.y);
+            transform.position = new Vector3(GroundPosition.x, GroundPosition.y + VisualHeight, GroundPosition.y);
         }
+
+        public void SetSpeed(float value) => speed = Mathf.Clamp(value, 0.5f, 8f);
     }
 }

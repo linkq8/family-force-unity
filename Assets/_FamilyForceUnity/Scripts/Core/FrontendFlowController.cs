@@ -77,12 +77,13 @@ namespace FamilyForceUnity.Core
                 else if (!axisHeld && Mathf.Abs(navigation.y) >= Mathf.Abs(navigation.x))
                 {
                     axisHeld = true;
-                    titleFocus = titleFocus == 0 ? 1 : 0;
+                    titleFocus = (titleFocus + (navigation.y < 0f ? 1 : 2)) % 3;
                 }
                 if (confirm && !confirmHeld)
                 {
                     if (titleFocus == 0) state = FrontendState.CharacterSelect;
-                    else updater?.Activate();
+                    else if (titleFocus == 1) updater?.Activate();
+                    else GameLocalization.Toggle();
                 }
             }
             else
@@ -189,10 +190,11 @@ namespace FamilyForceUnity.Core
             GUI.Label(new Rect(left, Screen.height * 0.16f, width, 96), "FAMILY FORCE", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.34f, width, 60), "UNITY", titleStyle);
             GUI.Label(new Rect(left, Screen.height * 0.51f, width, 34), "LOCAL CO-OP BEAT-'EM-UP", headingStyle);
-            DrawTitleButton(left, Screen.height * 0.69f, width, "START GAME", titleFocus == 0);
+            DrawTitleButton(left, Screen.height * 0.65f, width, GameLocalization.T("START GAME", "ابدأ اللعب"), titleFocus == 0);
             string updateLabel = updater != null ? updater.Status : "CHECK FOR UPDATE";
-            DrawTitleButton(left, Screen.height * 0.78f, width, updateLabel, titleFocus == 1);
-            GUI.Label(new Rect(left, Screen.height * 0.9f, width, 28), $"VERSION {Application.version}   D-pad to navigate   Confirm to select", hintStyle);
+            DrawTitleButton(left, Screen.height * 0.74f, width, updateLabel, titleFocus == 1);
+            DrawTitleButton(left, Screen.height * 0.83f, width, GameLocalization.Arabic ? "LANGUAGE: العربية" : "LANGUAGE: ENGLISH", titleFocus == 2);
+            GUI.Label(new Rect(left, Screen.height * 0.93f, width, 28), $"VERSION {Application.version}   D-pad / Confirm", hintStyle);
         }
 
         private void DrawTitleButton(float left, float top, float width, string label, bool focused)
@@ -212,8 +214,8 @@ namespace FamilyForceUnity.Core
             float width = Mathf.Min(Screen.width * 0.9f, 1060f);
             float left = (Screen.width - width) * 0.5f;
             float top = Mathf.Max(20f, Screen.height * 0.08f);
-            GUI.Label(new Rect(left, top, width, 44), "BUILD YOUR FAMILY FORCE", headingStyle);
-            GUI.Label(new Rect(left, top + 42f, width, 26), "Choose a hero and an independent Link companion. P2 can join or stay optional.", hintStyle);
+            GUI.Label(new Rect(left, top, width, 44), GameLocalization.T("BUILD YOUR FAMILY FORCE", "اختر فريق فاميلي فورس"), headingStyle);
+            GUI.Label(new Rect(left, top + 42f, width, 26), GameLocalization.T("Choose a hero and an independent Link companion. P2 is optional.", "اختر البطل والمرافق لكل لاعب. اللاعب الثاني اختياري."), hintStyle);
 
             float rowTop = top + 90f;
             DrawChoiceRow(left, rowTop, width, PlayerOneHeroRow, "P1 HERO", Choice(playerOneHero), true);
@@ -246,7 +248,7 @@ namespace FamilyForceUnity.Core
             DrawSolid(new Rect(left, top, width, 52f),
                 focused ? new Color(0.97f, 0.67f, 0.16f) : new Color(0.45f, 0.28f, 0.07f));
             var style = new GUIStyle(headingStyle) { normal = { textColor = focused ? new Color(0.05f, 0.04f, 0.08f) : Color.white } };
-            GUI.Label(new Rect(left, top + 9f, width, 34f), "START 60 HZ TEST STAGE", style);
+            GUI.Label(new Rect(left, top + 9f, width, 34f), GameLocalization.T("START STREET MISSION", "ابدأ مهمة الشارع"), style);
         }
 
         private void BuildStyles()
