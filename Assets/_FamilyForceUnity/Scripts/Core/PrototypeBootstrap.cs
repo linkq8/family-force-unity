@@ -83,6 +83,7 @@ namespace FamilyForceUnity.Core
             lastPlayerTwo = playerTwo;
             lastPlayerTwoLink = playerTwoLink;
             matchRoot = new GameObject("Active Combat Stage");
+            FindFirstObjectByType<AttackTokenManager>()?.ConfigureCapacity(hasPlayerTwo ? 2 : 1);
 
             BuildArena();
             CreateFighter($"P1 — {playerOne.DisplayName}", new Vector2(-6.5f, -0.5f), playerOne, playerOneLink, 0);
@@ -91,20 +92,20 @@ namespace FamilyForceUnity.Core
 
             GameObject rami = CreateStreetGuard("Rami — Street Guard", new Vector2(-1.2f, -0.3f));
             rami.GetComponent<FighterStateMachine>().ConfigureHealth(220);
-            rami.GetComponent<PrototypeEnemy>().Configure(3.0f, 7, 78);
+            rami.GetComponent<PrototypeEnemy>().Configure(3.0f, 6, 88);
             GameObject alleyA = CreateEnemy("Alley Runner A", new Vector2(-0.2f, 0.8f), new Color(0.2f, 0.55f, 0.78f), 200, 3.65f, 6);
             GameObject alleyB = CreateEnemy("Alley Runner B", new Vector2(0.7f, -1.25f), new Color(0.22f, 0.48f, 0.72f), 200, 3.65f, 6);
 
-            GameObject neonA = CreateEnemy("Neon Guard A", new Vector2(4.6f, 0.9f), new Color(0.66f, 0.15f, 0.73f), 260, 3.4f, 8);
-            GameObject neonB = CreateEnemy("Neon Guard B", new Vector2(5.6f, -1.2f), new Color(0.58f, 0.12f, 0.68f), 260, 3.4f, 8);
-            GameObject bruiserA = CreateEnemy("Dock Bruiser A", new Vector2(6.8f, 0.1f), new Color(0.75f, 0.28f, 0.12f), 340, 2.55f, 12);
-            GameObject bruiserB = CreateEnemy("Dock Bruiser B", new Vector2(7.5f, -0.9f), new Color(0.68f, 0.22f, 0.1f), 340, 2.55f, 12);
+            GameObject neonA = CreateEnemy("Neon Guard A", new Vector2(4.6f, 0.9f), new Color(0.66f, 0.15f, 0.73f), 260, 3.4f, 7);
+            GameObject neonB = CreateEnemy("Neon Guard B", new Vector2(5.6f, -1.2f), new Color(0.58f, 0.12f, 0.68f), 260, 3.4f, 7);
+            GameObject bruiserA = CreateEnemy("Dock Bruiser A", new Vector2(6.8f, 0.1f), new Color(0.75f, 0.28f, 0.12f), 340, 2.55f, 9);
+            GameObject bruiserB = CreateEnemy("Dock Bruiser B", new Vector2(7.5f, -0.9f), new Color(0.68f, 0.22f, 0.1f), 340, 2.55f, 9);
 
-            GameObject eliteA = CreateEnemy("Captain Elite A", new Vector2(10.7f, 0.9f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 10);
-            GameObject eliteB = CreateEnemy("Captain Elite B", new Vector2(11.5f, -1.2f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 10);
+            GameObject eliteA = CreateEnemy("Captain Elite A", new Vector2(10.7f, 0.9f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 8);
+            GameObject eliteB = CreateEnemy("Captain Elite B", new Vector2(11.5f, -1.2f), new Color(0.82f, 0.52f, 0.08f), 300, 3.5f, 8);
             GameObject boss = CreateStreetGuard("BOSS — Khalid, Neon Captain", new Vector2(12.8f, -0.15f));
             boss.GetComponent<FighterStateMachine>().ConfigureHealth(1400);
-            boss.GetComponent<PrototypeEnemy>().Configure(3.15f, 14, 58);
+            boss.GetComponent<PrototypeEnemy>().Configure(3.15f, 10, 68);
             boss.AddComponent<BossPhaseController>();
             boss.transform.localScale *= 1.55f;
             boss.GetComponent<SpriteRenderer>().color = new Color(0.68f, 0.03f, 0.08f);
@@ -134,6 +135,7 @@ namespace FamilyForceUnity.Core
             Vector2 position = p1 != null ? (Vector2)p1.transform.position + new Vector2(-0.8f, -0.55f) : new Vector2(-2f, -1f);
             CreateFighter($"P2 — {hero.DisplayName}", position, hero, link, 1);
             lastHasPlayerTwo = true;
+            FindFirstObjectByType<AttackTokenManager>()?.ConfigureCapacity(2);
             return true;
         }
 

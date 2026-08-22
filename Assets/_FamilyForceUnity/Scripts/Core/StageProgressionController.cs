@@ -70,6 +70,8 @@ namespace FamilyForceUnity.Core
             if (IsComplete || waves.Count == 0 || !WaveDefeated(waves[waveIndex])) return;
             waveIndex++;
             if (waveIndex >= waves.Count) { IsComplete = true; return; }
+            foreach (PrototypeFighterController player in players)
+                player.GetComponent<FighterStateMachine>()?.Heal(22);
             if (gate != null) gate.SetActive(false);
             waitingForNextWave = true;
             activateNextAt = Time.time + 2.5f;

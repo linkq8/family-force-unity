@@ -4,7 +4,7 @@
 from pathlib import Path
 import sys
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
 def remove_edge_connected_black(image: Image.Image) -> None:
@@ -35,7 +35,7 @@ def remove_edge_connected_black(image: Image.Image) -> None:
         if y + 1 < height: stack.append(index + width)
 
 
-def keep_largest_component(image: Image.Image) -> Image.Image:
+def keep_largest_component(image: Image.Image, focus_box=None) -> Image.Image:
     alpha = image.getchannel("A")
     width, height = image.size
     occupied = [value > 12 for value in alpha.getdata()]
@@ -72,7 +72,11 @@ def keep_largest_component(image: Image.Image) -> Image.Image:
         box = (min(xs), min(ys), max(xs), max(ys))
         horizontal_gap = max(0, main_box[0] - box[2], box[0] - main_box[2])
         vertical_gap = max(0, main_box[1] - box[3], box[1] - main_box[3])
-        if component is largest or (len(component) >= 3 and horizontal_gap <= 12 and vertical_gap <= 12):
+        center_x = (box[0] + box[2]) * 0.5
+        center_y = (box[1] + box[3]) * 0.5
+        centered = focus_box is None or (focus_box[0] <= center_x < focus_box[2] and focus_box[1] <= center_y < focus_box[3])
+        nearby = horizontal_gap <= 12 and vertical_gap <= 12
+        if component is largest or (centered and len(component) >= 3 and (focus_box is not None or nearby)):
             for index in component:
                 keep[index] = 255
     cleaned = image.copy()
@@ -80,6 +84,37 @@ def keep_largest_component(image: Image.Image) -> Image.Image:
     cleaned.putalpha(Image.frombytes("L", image.size,
         bytes(alpha_value if keep[index] else 0 for index, alpha_value in enumerate(original_alpha))))
     return cleaned
+
+
+def restore_enclosed_dark_details(image: Image.Image) -> Image.Image:
+    """Restore dark clothing holes enclosed by the visible silhouette without filling open body gaps."""
+    alpha = image.getchannel("A")
+    binary = alpha.point(lambda value: 255 if value > 12 else 0)
+    closed = binary.filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.MinFilter(15))
+    width, height = image.size
+    mask = closed.load()
+    outside = bytearray(width * height)
+    stack = []
+    for x in range(width): stack.extend((x, (height - 1) * width + x))
+    for y in range(height): stack.extend((y * width, y * width + width - 1))
+    while stack:
+        index = stack.pop()
+        if outside[index]: continue
+        x, y = index % width, index // width
+        if mask[x, y] != 0: continue
+        outside[index] = 1
+        if x: stack.append(index - 1)
+        if x + 1 < width: stack.append(index + 1)
+        if y: stack.append(index - width)
+        if y + 1 < height: stack.append(index + width)
+
+    restored = image.copy()
+    pixels = restored.load()
+    for index in range(width * height):
+        x, y = index % width, index // width
+        if pixels[x, y][3] == 0 and (mask[x, y] != 0 or not outside[index]):
+            pixels[x, y] = (8, 8, 8, 255)
+    return restored
 
 
 def main() -> None:
@@ -110,21 +145,22 @@ def main() -> None:
     cell = side // 4
     x_cuts = [0, cell, cell * 2, cell * 3, side]
     y_cuts = [0, cell, cell * 2, cell * 3, side]
-    if normalize_frames:
-        alpha = source.getchannel("A")
-
-        def least_occupied_cut(nominal: int, vertical: bool) -> int:
-            candidates = range(max(1, nominal - 18), min(side - 1, nominal + 19))
-            if vertical:
-                return min(candidates, key=lambda value: sum(alpha.crop((value, 0, value + 1, side)).getdata()))
-            return min(candidates, key=lambda value: sum(alpha.crop((0, value, side, value + 1)).getdata()))
-
-        x_cuts[1:4] = [least_occupied_cut(cell * index, True) for index in range(1, 4)]
-        y_cuts[1:4] = [least_occupied_cut(cell * index, False) for index in range(1, 4)]
+    # Keep the authored grid boundaries exact. Searching for low-occupancy cuts can move a row
+    # boundary into a dark-haired head and was the cause of missing heads during punch frames.
 
     for row in range(4):
         for column in range(4):
-            frame = source.crop((x_cuts[column], y_cuts[row], x_cuts[column + 1], y_cuts[row + 1]))
+            if normalize_frames:
+                margin = 42
+                crop_left = max(0, x_cuts[column] - margin)
+                crop_top = max(0, y_cuts[row] - margin)
+                frame = source.crop((crop_left, crop_top,
+                    min(side, x_cuts[column + 1] + margin), min(side, y_cuts[row + 1] + margin)))
+                focus = (x_cuts[column] - crop_left, y_cuts[row] - crop_top,
+                    x_cuts[column + 1] - crop_left, y_cuts[row + 1] - crop_top)
+                frame = keep_largest_component(frame, focus)
+            else:
+                frame = source.crop((x_cuts[column], y_cuts[row], x_cuts[column + 1], y_cuts[row + 1]))
             if normalize_frames:
                 bounds = frame.getchannel("A").getbbox()
                 if bounds is not None:
@@ -133,7 +169,7 @@ def main() -> None:
                     frame = frame.resize((max(1, round(frame.width * scale)), max(1, round(frame.height * scale))), Image.Resampling.NEAREST)
                     normalized = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
                     normalized.alpha_composite(frame, ((256 - frame.width) // 2, 248 - frame.height))
-                    frame = keep_largest_component(normalized)
+                    frame = restore_enclosed_dark_details(normalized)
             else:
                 frame = frame.resize((256, 256), Image.Resampling.NEAREST)
             sheet.alpha_composite(frame, (column * 256, row * 256))

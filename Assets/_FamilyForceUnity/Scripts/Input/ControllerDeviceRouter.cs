@@ -144,14 +144,18 @@ namespace FamilyForceUnity.Input
         public static bool ReadPlayerPause(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadStart(playerIndex) || AndroidNativeInputBridge.ReadScan(playerIndex, 315);
+                return AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadScan(playerIndex, 315)
+                    : AndroidNativeInputBridge.ReadStart(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.startButton.isPressed;
         }
 
         public static bool ReadPlayerShare(int playerIndex)
         {
             if (AndroidNativeInputBridge.IsActive)
-                return AndroidNativeInputBridge.ReadSelect(playerIndex) || AndroidNativeInputBridge.ReadScan(playerIndex, 314);
+                return AndroidNativeInputBridge.UsesPlayStationScanMapping(playerIndex)
+                    ? AndroidNativeInputBridge.ReadScan(playerIndex, 314)
+                    : AndroidNativeInputBridge.ReadSelect(playerIndex);
             return GetController(playerIndex) is Gamepad gamepad && gamepad.selectButton.isPressed;
         }
 
